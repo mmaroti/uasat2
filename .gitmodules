@@ -1,0 +1,3 @@
+[submodule "src/solvers/minisat"]
+	path = src/solvers/minisat
+	url = https://github.com/master-keying/minisat.git
