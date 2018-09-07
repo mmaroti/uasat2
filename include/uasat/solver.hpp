@@ -24,6 +24,7 @@
 #define __UASAT_SOLVER_HPP__
 
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace uasat {
@@ -41,13 +42,9 @@ public:
 
   virtual literal_t add_variable(bool decision = true) = 0;
   virtual void add_clause(const std::vector<literal_t> &clause) = 0;
-  virtual void add_clause(literal_t lit1) { add_clause({lit1}); }
-  virtual void add_clause(literal_t lit1, literal_t lit2) {
-    add_clause({lit1, lit2});
-  }
-  virtual void add_clause(literal_t lit1, literal_t lit2, literal_t lit3) {
-    add_clause({lit1, lit2, lit3});
-  }
+  virtual void add_clause(literal_t lit1) = 0;
+  virtual void add_clause(literal_t lit1, literal_t lit2) = 0;
+  virtual void add_clause(literal_t lit1, literal_t lit2, literal_t lit3) = 0;
 
   virtual unsigned long get_variables() const = 0;
   virtual unsigned long get_clauses() const = 0;

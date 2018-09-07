@@ -2,8 +2,7 @@ add_library(uasat-solvers STATIC
     solver.cpp
     minisat.cpp
     minisat/minisat/core/Solver.cc
-    minisat/minisat/utils/Options.cc
-    minisat/minisat/utils/System.cc)
+    minisat/minisat/utils/Options.cc)
 
 target_include_directories(uasat-solvers PUBLIC ../../include)
 target_include_directories(uasat-solvers PRIVATE minisat)
@@ -21,3 +20,10 @@ target_compile_features(uasat-solvers
       cxx_deleted_functions
       cxx_final
 )
+
+list(APPEND UASAT_EMSCRIPTEN_SRCS
+    ${CMAKE_CURRENT_SOURCE_DIR}/solver.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/minisat.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/minisat/minisat/core/Solver.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/minisat/minisat/utils/Options.cc)
+set(UASAT_EMSCRIPTEN_SRCS "${UASAT_EMSCRIPTEN_SRCS}" PARENT_SCOPE)
