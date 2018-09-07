@@ -71,7 +71,7 @@ unsigned long MiniSat::get_variable_count() const {
 }
 
 unsigned long MiniSat::get_clause_count() const {
-  return std::max(solver->nClauses(), 1) - 1;
+  return solver->nClauses();
 }
 
 } // namespace uasat
