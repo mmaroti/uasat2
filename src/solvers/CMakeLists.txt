@@ -21,9 +21,9 @@ target_compile_features(uasat-solvers
       cxx_final
 )
 
-list(APPEND UASAT_EMSCRIPTEN_SRCS
+list(APPEND UASAT_EMSCRIPTEN_SOLVER_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/solver.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/minisat.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/minisat/minisat/core/Solver.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/minisat/minisat/utils/Options.cc)
-set(UASAT_EMSCRIPTEN_SRCS "${UASAT_EMSCRIPTEN_SRCS}" PARENT_SCOPE)
+set(UASAT_EMSCRIPTEN_SOLVER_SRCS "${UASAT_EMSCRIPTEN_SOLVER_SRCS}" PARENT_SCOPE)

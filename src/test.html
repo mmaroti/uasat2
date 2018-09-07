@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>UaSat validation</title>
+  <meta charset='utf-8' />
+</head>
+
+<body>
+</body>
+
+<script type="text/javascript" src="uasat.js"></script>
+<script type='text/javascript'>
+  function execute(args) {
+    return new Promise(function (resolve, reject) {
+      var stdout = '';
+      var module = Module({
+        'arguments': args,
+        'print': function (line) {
+          stdout += line;
+        }
+      }).then(function (module) {
+        module.postRun.push(function () {
+          resolve(stdout);
+        });
+      });
+      console.log(module);
+    });
+  }
+
+  var result = execute(8);
+  result.then(function (val) {
+    console.log('success: ' + val);
+  }, function (err) {
+    console.log('failure: ' + err);
+  });
+
+</script>
+
+</html>
