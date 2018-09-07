@@ -29,10 +29,92 @@
 namespace uasat {
 
 std::unique_ptr<Solver> Solver::create(const std::string &options) {
-  if (options == "" || options == "minisat")
+  if (options == "minisat")
     return std::unique_ptr<MiniSat>(new MiniSat());
 
   throw std::invalid_argument("invalid solver");
+}
+
+literal_t Solver::land(literal_t a, literal_t b) {
+  if (a == -TRUE || b == -TRUE)
+    return -TRUE;
+  else if (a == TRUE)
+    return b;
+  else if (b == TRUE)
+    return a;
+  else if (a == b)
+    return a;
+  else if (a == -b)
+    return -TRUE;
+
+  literal_t c = add_variable(false);
+  add_clause(a, -c);
+  add_clause(b, -c);
+  add_clause(-a, -b, c);
+  return c;
+}
+
+literal_t Solver::lor(literal_t a, literal_t b) {
+  if (a == TRUE || b == TRUE)
+    return TRUE;
+  else if (a == -TRUE)
+    return b;
+  else if (b == -TRUE)
+    return a;
+  else if (a == b)
+    return a;
+  else if (a == -b)
+    return TRUE;
+
+  literal_t c = add_variable(false);
+  add_clause(-a, c);
+  add_clause(-b, c);
+  add_clause(a, b, -c);
+  return c;
+}
+
+literal_t Solver::ladd(literal_t a, literal_t b) {
+  if (a == TRUE)
+    return -b;
+  else if (b == TRUE)
+    return -a;
+  else if (a == -TRUE)
+    return b;
+  else if (b == -TRUE)
+    return a;
+  else if (a == b)
+    return -TRUE;
+  else if (a == -b)
+    return TRUE;
+
+  literal_t c = add_variable(false);
+  add_clause(a, b, -c);
+  add_clause(-a, b, c);
+  add_clause(a, -b, c);
+  add_clause(-a, -b, -c);
+  return c;
+}
+
+literal_t Solver::lequ(literal_t a, literal_t b) {
+  if (a == TRUE)
+    return b;
+  else if (b == TRUE)
+    return a;
+  else if (a == -TRUE)
+    return -b;
+  else if (b == -TRUE)
+    return -a;
+  else if (a == b)
+    return TRUE;
+  else if (a == -b)
+    return -TRUE;
+
+  literal_t c = add_variable(false);
+  add_clause(a, b, c);
+  add_clause(-a, b, -c);
+  add_clause(a, -b, -c);
+  add_clause(-a, -b, c);
+  return c;
 }
 
 } // namespace uasat

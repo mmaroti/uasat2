@@ -44,19 +44,20 @@ protected:
 
 public:
   MiniSat();
+  virtual void clear() override;
 
-  virtual literal_t add_literal() override;
+  virtual literal_t add_variable(bool decition = false) override;
   virtual void add_clause(const std::vector<literal_t> &clause) override;
   virtual void add_clause(literal_t lit1) override;
   virtual void add_clause(literal_t lit1, literal_t lit2) override;
   virtual void add_clause(literal_t lit1, literal_t lit2,
                           literal_t lit3) override;
 
-  virtual void clear() override;
-  virtual bool solve() override;
+  virtual unsigned long get_variables() const override;
+  virtual unsigned long get_clauses() const override;
 
-  virtual unsigned long get_variable_count() const override;
-  virtual unsigned long get_clause_count() const override;
+  virtual bool solve() override;
+  virtual bool get_value(literal_t lit) const override;
 };
 
 } // namespace uasat

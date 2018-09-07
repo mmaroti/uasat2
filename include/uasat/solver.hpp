@@ -29,17 +29,17 @@
 namespace uasat {
 
 typedef int literal_t;
-inline literal_t negate(literal_t lit) { return -lit; }
 
 class Solver {
 protected:
   literal_t TRUE;
 
 public:
-  static std::unique_ptr<Solver> create(const std::string &options = "");
+  static std::unique_ptr<Solver> create(const std::string &options = "minisat");
   virtual ~Solver() = default;
+  virtual void clear() = 0;
 
-  virtual literal_t add_literal() = 0;
+  virtual literal_t add_variable(bool decision = true) = 0;
   virtual void add_clause(const std::vector<literal_t> &clause) = 0;
   virtual void add_clause(literal_t lit1) { add_clause({lit1}); }
   virtual void add_clause(literal_t lit1, literal_t lit2) {
@@ -49,14 +49,20 @@ public:
     add_clause({lit1, lit2, lit3});
   }
 
-  virtual void clear() = 0;
-  virtual bool solve() = 0;
+  virtual unsigned long get_variables() const = 0;
+  virtual unsigned long get_clauses() const = 0;
 
-  virtual unsigned long get_variable_count() const = 0;
-  virtual unsigned long get_clause_count() const = 0;
+  virtual bool solve() = 0;
+  virtual bool get_value(literal_t) const = 0;
 
   literal_t get_true() const { return TRUE; }
   literal_t get_false() const { return -TRUE; }
+
+  literal_t lnot(literal_t a) { return -a; }
+  literal_t land(literal_t a, literal_t b);
+  literal_t lor(literal_t a, literal_t b);
+  literal_t ladd(literal_t a, literal_t b);
+  literal_t lequ(literal_t a, literal_t b);
 };
 
 } // namespace uasat

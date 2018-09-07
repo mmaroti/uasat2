@@ -20,6 +20,8 @@
  * IN THE SOFTWARE.
  */
 
+#include <cassert>
+
 #include "minisat.hpp"
 
 namespace uasat {
@@ -33,7 +35,9 @@ void MiniSat::clear() {
   solvable = true;
 }
 
-literal_t MiniSat::add_literal() { return var2gen(solver->newVar()); }
+literal_t MiniSat::add_variable(bool decision) {
+  return var2gen(solver->newVar(true, decision));
+}
 
 void MiniSat::add_clause(const std::vector<literal_t> &clause) {
   if (solvable) {
@@ -60,18 +64,22 @@ void MiniSat::add_clause(literal_t lit1, literal_t lit2, literal_t lit3) {
     solvable = solver->addClause(gen2lit(lit1), gen2lit(lit2), gen2lit(lit3));
 }
 
+unsigned long MiniSat::get_variables() const {
+  return std::max(solver->nVars(), 1) - 1;
+}
+
+unsigned long MiniSat::get_clauses() const { return solver->nClauses(); }
+
 bool MiniSat::solve() {
   if (solvable)
     solvable = solver->solve();
   return solvable;
 }
 
-unsigned long MiniSat::get_variable_count() const {
-  return std::max(solver->nVars(), 1) - 1;
-}
+bool MiniSat::get_value(literal_t lit) const {
+  assert(solvable);
 
-unsigned long MiniSat::get_clause_count() const {
-  return solver->nClauses();
+  return solver->modelValue(gen2lit(lit)).isTrue();
 }
 
 } // namespace uasat

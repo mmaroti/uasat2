@@ -20,21 +20,63 @@
  * IN THE SOFTWARE.
  */
 
+#include <chrono>
 #include <iostream>
 
 #include "uasat/solver.hpp"
 
-int main() {
+int validate(int size) {
   std::unique_ptr<uasat::Solver> solver = uasat::Solver::create();
 
-  uasat::literal_t lit1 = solver->add_literal();
-  uasat::literal_t lit2 = solver->add_literal();
-  solver->add_clause(lit1, lit2);
-  solver->add_clause(-lit1, lit2);
-  solver->add_clause(lit1, -lit2);
-  solver->add_clause(-lit1, -lit2);
+  // create binary relation
+  std::vector<uasat::literal_t> table(size * size);
+  for (size_t i = 0; i < table.size(); i++)
+    table[i] = solver->add_variable();
 
-  std::cout << solver->solve() << std::endl;
-  std::cout << solver->get_variable_count() << std::endl;
-  std::cout << solver->get_clause_count() << std::endl;
+  // reflexive
+  for (int i = 0; i < size; i++)
+    solver->add_clause(table[i * (size + 1)]);
+
+  // symmetric
+  for (int i = 0; i < size; i++)
+    for (int j = 0; j < size; j++)
+      solver->add_clause(table[i * size + j], -table[j * size + i]);
+
+  // transitive
+  for (int i = 0; i < size; i++)
+    for (int j = 0; j < size; j++)
+      for (int k = 0; k < size; k++)
+        solver->add_clause(-table[i * size + j], -table[j * size + k],
+                           table[i * size + k]);
+
+  std::vector<uasat::literal_t> clause(size * size);
+  int count = 0;
+  while (solver->solve()) {
+    count += 1;
+
+    for (size_t i = 0; i < table.size(); i++) {
+      bool b = solver->get_value(table[i]);
+      clause[i] = b ? solver->lnot(table[i]) : table[i];
+    }
+    solver->add_clause(clause);
+  }
+
+  return count;
+}
+
+int main() {
+  std::cout << "Calculating the 8th Bell number (4140 solutions): ";
+
+  auto start = std::chrono::steady_clock::now();
+  int result = validate(8);
+  int msecs = std::chrono::duration_cast<std::chrono::milliseconds>(
+                  std::chrono::steady_clock::now() - start)
+                  .count();
+
+  if (result != 4140)
+    std::cout << "incorrect answer of " << result << std::endl;
+  else
+    std::cout << msecs << " milliseconds" << std::endl;
+
+  return 0;
 }
