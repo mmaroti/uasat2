@@ -1,5 +1,4 @@
 add_library(uasat-solvers STATIC
-    solver.cpp
     minisat.cpp
     minisat/minisat/core/Solver.cc
     minisat/minisat/utils/Options.cc)
@@ -22,7 +21,6 @@ target_compile_features(uasat-solvers
 )
 
 list(APPEND uasat_emscripten_solvers_srcs
-    ${CMAKE_CURRENT_SOURCE_DIR}/solver.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/minisat.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/minisat/minisat/core/Solver.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/minisat/minisat/utils/Options.cc)

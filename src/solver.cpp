@@ -36,84 +36,43 @@ std::unique_ptr<Solver> Solver::create(const std::string &options) {
 }
 
 literal_t Solver::land(literal_t a, literal_t b) {
-  if (a == -TRUE || b == -TRUE)
-    return -TRUE;
+  if (a == FALSE || b == FALSE)
+    return FALSE;
   else if (a == TRUE)
     return b;
   else if (b == TRUE)
     return a;
   else if (a == b)
     return a;
-  else if (a == -b)
-    return -TRUE;
+  else if (a == lnot(b))
+    return FALSE;
 
   literal_t c = add_variable(false);
-  add_clause(a, -c);
-  add_clause(b, -c);
-  add_clause(-a, -b, c);
-  return c;
-}
-
-literal_t Solver::lor(literal_t a, literal_t b) {
-  if (a == TRUE || b == TRUE)
-    return TRUE;
-  else if (a == -TRUE)
-    return b;
-  else if (b == -TRUE)
-    return a;
-  else if (a == b)
-    return a;
-  else if (a == -b)
-    return TRUE;
-
-  literal_t c = add_variable(false);
-  add_clause(-a, c);
-  add_clause(-b, c);
-  add_clause(a, b, -c);
+  add_clause(a, lnot(c));
+  add_clause(b, lnot(c));
+  add_clause(lnot(a), lnot(b), c);
   return c;
 }
 
 literal_t Solver::ladd(literal_t a, literal_t b) {
-  if (a == TRUE)
-    return -b;
-  else if (b == TRUE)
-    return -a;
-  else if (a == -TRUE)
+  if (a == FALSE)
     return b;
-  else if (b == -TRUE)
+  else if (b == FALSE)
     return a;
+  else if (a == TRUE)
+    return lnot(b);
+  else if (b == TRUE)
+    return lnot(a);
   else if (a == b)
-    return -TRUE;
-  else if (a == -b)
+    return FALSE;
+  else if (a == lnot(b))
     return TRUE;
 
   literal_t c = add_variable(false);
-  add_clause(a, b, -c);
-  add_clause(-a, b, c);
-  add_clause(a, -b, c);
-  add_clause(-a, -b, -c);
-  return c;
-}
-
-literal_t Solver::lequ(literal_t a, literal_t b) {
-  if (a == TRUE)
-    return b;
-  else if (b == TRUE)
-    return a;
-  else if (a == -TRUE)
-    return -b;
-  else if (b == -TRUE)
-    return -a;
-  else if (a == b)
-    return TRUE;
-  else if (a == -b)
-    return -TRUE;
-
-  literal_t c = add_variable(false);
-  add_clause(a, b, c);
-  add_clause(-a, b, -c);
-  add_clause(a, -b, -c);
-  add_clause(-a, -b, c);
+  add_clause(a, b, lnot(c));
+  add_clause(lnot(a), b, c);
+  add_clause(a, lnot(b), c);
+  add_clause(lnot(a), lnot(b), lnot(c));
   return c;
 }
 

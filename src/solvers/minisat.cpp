@@ -21,17 +21,20 @@
  */
 
 #include <cassert>
+#include <stdexcept>
 
 #include "minisat.hpp"
 
 namespace uasat {
 
-MiniSat::MiniSat() { clear(); }
+MiniSat::MiniSat() : Solver(1) { clear(); }
 
 void MiniSat::clear() {
   solver = std::unique_ptr<Minisat::Solver>(new Minisat::Solver());
-  TRUE = var2gen(solver->newVar());
-  solver->addClause(gen2lit(TRUE));
+  literal_t lit = var2gen(solver->newVar());
+  if (lit != TRUE)
+    throw new std::logic_error("First literal of MiniSat is not 1");
+  solver->addClause(gen2lit(lit));
   solvable = true;
 }
 

@@ -24,8 +24,9 @@
 
   <script src="validate.js"></script>
   <script>
+    var stdout = document.getElementById('stdout')
+    stdout.value = ''
     function run() {
-      var stdout = document.getElementById('stdout')
       stdout.value = ''
       Module({
         'print': function (line) {
