@@ -7,3 +7,4 @@ project(uasat VERSION 0.1
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 
 add_subdirectory(src)
+add_subdirectory(apps)

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>UaSat validation</title>
+  <meta charset="utf-8" />
+</head>
+
+<body style="width:650px">
+  <p>
+    This is a simple experiment to run in your browser a C++ program compiled
+    to JavaScript and WebAssembly. The program uses MiniSAT to find all
+    equivalence relations on an 8-element set. On a recent laptop the native
+    binary executable completes in 84 milliseconds. This JavaScript
+    version should finish under 200 milliseconds depending on the browser
+    and computer you are using. The source code is available on
+    <a href="https://github.com/mmaroti/uasat2">GitHub</a>.
+  </p>
+  <form>
+    <input type="button" value="Run" onClick="run()" />
+    <p></p>
+    <textarea id="stdout" rows="10" cols="80" wrap="soft"></textarea>
+  </form>
+
+  <script src="validate.js"></script>
+  <script>
+    function run() {
+      var stdout = document.getElementById('stdout')
+      stdout.value = ''
+      Module({
+        'print': function (line) {
+          stdout.value += line;
+        }
+      });
+    }
+  </script>
+</body>
+
+</html>
