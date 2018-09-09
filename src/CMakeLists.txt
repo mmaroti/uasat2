@@ -1,7 +1,7 @@
 add_subdirectory(solvers)
 
 add_library(uasat SHARED
-    boolalg.cpp)
+    solver.cpp)
 
 target_include_directories(uasat PUBLIC ../include)
 target_link_libraries(uasat uasat-minisat)
@@ -21,6 +21,6 @@ target_compile_features(uasat
 )
 
 list(APPEND uasat_emscripten_srcs
-    ${CMAKE_CURRENT_SOURCE_DIR}/boolalg.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/solver.cpp
     ${uasat_emscripten_solvers_srcs})
 set(uasat_emscripten_srcs "${uasat_emscripten_srcs}" PARENT_SCOPE)

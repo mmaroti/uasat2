@@ -43,8 +43,8 @@ public:
   static literal_t lnot(literal_t a) { return -a; }
   virtual literal_t land(literal_t a, literal_t b) { return -lor(-a, -b); }
   virtual literal_t lor(literal_t a, literal_t b) { return -land(-a, -b); }
-  virtual literal_t ladd(literal_t a, literal_t b) { return -lxor(a, -b); }
-  virtual literal_t lxor(literal_t a, literal_t b) { return -ladd(a, -b); }
+  virtual literal_t ladd(literal_t a, literal_t b) { return lxor(a, -b); }
+  virtual literal_t lxor(literal_t a, literal_t b) { return ladd(a, -b); }
 };
 
 extern const BoolAlg BINARY;

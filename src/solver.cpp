@@ -20,7 +20,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "uasat/boolalg.hpp"
+#include "uasat/solver.hpp"
 #include "solvers/minisat.hpp"
 
 namespace uasat {

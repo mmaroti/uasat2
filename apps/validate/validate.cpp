@@ -23,7 +23,7 @@
 #include <chrono>
 #include <iostream>
 
-#include "uasat/boolalg.hpp"
+#include "uasat/solver.hpp"
 
 int validate(int size) {
   std::shared_ptr<uasat::Solver> solver = uasat::Solver::create();

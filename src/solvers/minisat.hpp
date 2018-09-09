@@ -26,7 +26,7 @@
 #include <memory>
 #include <stdexcept>
 
-#include "uasat/boolalg.hpp"
+#include "uasat/solver.hpp"
 
 namespace Minisat {
 class Solver;
