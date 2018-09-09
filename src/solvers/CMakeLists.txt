@@ -1,18 +1,19 @@
-add_library(uasat-solvers STATIC
+add_library(uasat-minisat STATIC
     minisat.cpp
     minisat/minisat/core/Solver.cc
     minisat/minisat/utils/Options.cc)
+set_property(TARGET uasat-minisat PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-target_include_directories(uasat-solvers PUBLIC ../../include)
-target_include_directories(uasat-solvers PRIVATE minisat)
+target_include_directories(uasat-minisat PUBLIC ../../include)
+target_include_directories(uasat-minisat PRIVATE minisat)
 
-set_target_properties(uasat-solvers PROPERTIES
+set_target_properties(uasat-minisat PROPERTIES
     CXX_STANDARD 11
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
 )
 
-target_compile_features(uasat-solvers
+target_compile_features(uasat-minisat
     PUBLIC
       cxx_attributes
       cxx_defaulted_functions

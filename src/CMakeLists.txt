@@ -1,11 +1,11 @@
 add_subdirectory(solvers)
 
-add_library(uasat STATIC
+add_library(uasat SHARED
     solver.cpp)
 
 target_include_directories(uasat PUBLIC ../include)
 target_include_directories(uasat PUBLIC solvers)
-target_link_libraries(uasat uasat-solvers)
+target_link_libraries(uasat uasat-minisat)
 
 set_target_properties(uasat PROPERTIES
     CXX_STANDARD 11
