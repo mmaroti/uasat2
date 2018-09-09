@@ -20,17 +20,33 @@
  * IN THE SOFTWARE.
  */
 
-#include <memory>
-#include <stdexcept>
-
-#include "minisat.hpp"
-#include "uasat/solver.hpp"
+#include "uasat/boolalg.hpp"
+#include "solvers/minisat.hpp"
 
 namespace uasat {
 
-std::unique_ptr<Solver> Solver::create(const std::string &options) {
+class Binary : public BoolAlg {
+public:
+  Binary() : BoolAlg(1) {}
+
+  virtual literal_t land(literal_t a, literal_t b) override {
+    return a <= b ? a : b;
+  }
+
+  virtual literal_t ladd(literal_t a, literal_t b) override {
+    literal_t s = a ^ b;          // sign(a*b)
+    a = a < 0 ? -a : a;           // abs(a)
+    b = b < 0 ? -b : b;           // abs(b)
+    literal_t c = a <= b ? a : b; // min(a,b)
+    return s < 0 ? -c : c;
+  }
+};
+
+const BoolAlg Binary();
+
+std::shared_ptr<Solver> Solver::create(const std::string &options) {
   if (options == "minisat")
-    return std::unique_ptr<MiniSat>(new MiniSat());
+    return std::make_shared<MiniSat>();
 
   throw std::invalid_argument("invalid solver");
 }

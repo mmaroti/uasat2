@@ -23,10 +23,10 @@
 #include <chrono>
 #include <iostream>
 
-#include "uasat/solver.hpp"
+#include "uasat/boolalg.hpp"
 
 int validate(int size) {
-  std::unique_ptr<uasat::Solver> solver = uasat::Solver::create();
+  std::shared_ptr<uasat::Solver> solver = uasat::Solver::create();
 
   // create binary relation
   std::vector<uasat::literal_t> table(size * size);

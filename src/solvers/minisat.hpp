@@ -26,8 +26,11 @@
 #include <memory>
 #include <stdexcept>
 
-#include "minisat/core/Solver.h"
-#include "uasat/solver.hpp"
+#include "uasat/boolalg.hpp"
+
+namespace Minisat {
+class Solver;
+}
 
 namespace uasat {
 
@@ -36,17 +39,12 @@ protected:
   std::unique_ptr<Minisat::Solver> solver;
   bool solvable;
 
-  static literal_t var2gen(Minisat::Var var) { return var + 1; }
-
-  static Minisat::Lit gen2lit(literal_t lit) {
-    return Minisat::toLit(lit > 0 ? (lit << 1) - 2 : ((-lit) << 1) - 1);
-  }
-
 public:
   MiniSat();
+  virtual ~MiniSat();
   virtual void clear() override;
 
-  virtual literal_t add_variable(bool decition = false) override;
+  virtual literal_t add_variable(bool decision = false) override;
   virtual void add_clause(const std::vector<literal_t> &clause) override;
   virtual void add_clause(literal_t lit1) override;
   virtual void add_clause(literal_t lit1, literal_t lit2) override;

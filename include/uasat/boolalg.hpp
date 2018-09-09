@@ -23,6 +23,10 @@
 #ifndef __UASAT_BOOLALG_HPP__
 #define __UASAT_BOOLALG_HPP__
 
+#include <memory>
+#include <string>
+#include <vector>
+
 namespace uasat {
 
 typedef int literal_t;
@@ -34,12 +38,40 @@ public:
 
 public:
   BoolAlg(literal_t TRUE) : TRUE(TRUE), FALSE(-TRUE) {}
+  virtual ~BoolAlg() = default;
 
   static literal_t lnot(literal_t a) { return -a; }
   virtual literal_t land(literal_t a, literal_t b) { return -lor(-a, -b); }
   virtual literal_t lor(literal_t a, literal_t b) { return -land(-a, -b); }
   virtual literal_t ladd(literal_t a, literal_t b) { return -lxor(a, -b); }
   virtual literal_t lxor(literal_t a, literal_t b) { return -ladd(a, -b); }
+};
+
+extern const BoolAlg BINARY;
+
+class Solver : public BoolAlg {
+protected:
+  Solver(literal_t TRUE) : BoolAlg(TRUE) {}
+
+public:
+  static std::shared_ptr<Solver> create(const std::string &options = "minisat");
+  virtual ~Solver() = default;
+  virtual void clear() = 0;
+
+  virtual literal_t add_variable(bool decision = true) = 0;
+  virtual void add_clause(const std::vector<literal_t> &clause) = 0;
+  virtual void add_clause(literal_t lit1) = 0;
+  virtual void add_clause(literal_t lit1, literal_t lit2) = 0;
+  virtual void add_clause(literal_t lit1, literal_t lit2, literal_t lit3) = 0;
+
+  virtual unsigned long get_variables() const = 0;
+  virtual unsigned long get_clauses() const = 0;
+
+  virtual bool solve() = 0;
+  virtual bool get_value(literal_t) const = 0;
+
+  virtual literal_t land(literal_t a, literal_t b) override;
+  virtual literal_t ladd(literal_t a, literal_t b) override;
 };
 
 } // namespace uasat

@@ -24,10 +24,19 @@
 #include <stdexcept>
 
 #include "minisat.hpp"
+#include "minisat/core/Solver.h"
 
 namespace uasat {
 
+inline literal_t var2gen(Minisat::Var var) { return var + 1; }
+
+inline Minisat::Lit gen2lit(literal_t lit) {
+  return Minisat::toLit(lit > 0 ? (lit << 1) - 2 : ((-lit) << 1) - 1);
+}
+
 MiniSat::MiniSat() : Solver(1) { clear(); }
+
+MiniSat::~MiniSat() {}
 
 void MiniSat::clear() {
   solver = std::unique_ptr<Minisat::Solver>(new Minisat::Solver());
