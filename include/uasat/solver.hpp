@@ -20,8 +20,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef __UASAT_BOOLALG_HPP__
-#define __UASAT_BOOLALG_HPP__
+#ifndef UASAT_SOLVER_HPP
+#define UASAT_SOLVER_HPP
 
 #include <memory>
 #include <string>
@@ -31,14 +31,14 @@ namespace uasat {
 
 typedef int literal_t;
 
-class BoolAlg {
+class Logic {
 public:
   const literal_t TRUE;
   const literal_t FALSE;
 
 public:
-  BoolAlg(literal_t TRUE) : TRUE(TRUE), FALSE(-TRUE) {}
-  virtual ~BoolAlg() = default;
+  Logic(literal_t TRUE) : TRUE(TRUE), FALSE(-TRUE) {}
+  virtual ~Logic() = default;
 
   static literal_t lnot(literal_t a) { return -a; }
   virtual literal_t land(literal_t a, literal_t b) { return -lor(-a, -b); }
@@ -47,11 +47,11 @@ public:
   virtual literal_t lxor(literal_t a, literal_t b) { return ladd(a, -b); }
 };
 
-extern const BoolAlg BINARY;
+extern const std::shared_ptr<Logic> BOOLEAN;
 
-class Solver : public BoolAlg {
+class Solver : public Logic {
 protected:
-  Solver(literal_t TRUE) : BoolAlg(TRUE) {}
+  Solver(literal_t TRUE) : Logic(TRUE) {}
 
 public:
   static std::shared_ptr<Solver> create(const std::string &options = "minisat");
@@ -76,4 +76,4 @@ public:
 
 } // namespace uasat
 
-#endif // __UASAT_BOOLALG_HPP__
+#endif // UASAT_SOLVER_HPP

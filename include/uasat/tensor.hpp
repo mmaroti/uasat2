@@ -20,44 +20,42 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UASAT_MINISAT_HPP
-#define UASAT_MINISAT_HPP
-
-#include <memory>
-#include <stdexcept>
+#ifndef UASAT_TENSOR_HPP
+#define UASAT_TENSOR_HPP
 
 #include "uasat/solver.hpp"
 
-namespace Minisat {
-class Solver;
-}
-
 namespace uasat {
 
-class MiniSat : public Solver {
+class Tensor {
+public:
+  const std::vector<int> shape;
+  const int length;
+  const std::shared_ptr<Logic> logic;
+
 protected:
-  std::unique_ptr<Minisat::Solver> solver;
-  bool solvable;
+  const std::vector<int> strides;
+  std::shared_ptr<std::vector<literal_t>> storage;
 
 public:
-  MiniSat();
-  virtual ~MiniSat();
-  virtual void clear() override;
+  static std::unique_ptr<Tensor>
+  create_variables(const std::vector<int> &shape,
+                   const std::shared_ptr<Solver> &solver, bool decision = true);
 
-  virtual literal_t add_variable(bool decision = false) override;
-  virtual void add_clause(const std::vector<literal_t> &clause) override;
-  virtual void add_clause(literal_t lit1) override;
-  virtual void add_clause(literal_t lit1, literal_t lit2) override;
-  virtual void add_clause(literal_t lit1, literal_t lit2,
-                          literal_t lit3) override;
+  virtual ~Tensor() = default;
 
-  virtual unsigned long get_variables() const override;
-  virtual unsigned long get_clauses() const override;
+  class iterator {
+  protected:
+    std::vector<int> indices;
+    int offset;
 
-  virtual bool solve() override;
-  virtual bool get_value(literal_t lit) const override;
+  public:
+  };
+
+protected:
+  Tensor(const std::vector<int> &shape, const std::shared_ptr<Logic> &logic);
 };
 
 } // namespace uasat
 
-#endif // UASAT_SOLVER_HPP
+#endif // UASAT_TENSOR_HPP

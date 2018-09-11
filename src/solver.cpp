@@ -25,9 +25,9 @@
 
 namespace uasat {
 
-class Binary : public BoolAlg {
+class Boolean : public Logic {
 public:
-  Binary() : BoolAlg(1) {}
+  Boolean() : Logic(1) {}
 
   virtual literal_t land(literal_t a, literal_t b) override {
     return a <= b ? a : b;
@@ -42,7 +42,7 @@ public:
   }
 };
 
-const BoolAlg Binary();
+const std::shared_ptr<Logic> BOOLEAN = std::make_shared<Boolean>();
 
 std::shared_ptr<Solver> Solver::create(const std::string &options) {
   if (options == "minisat")
