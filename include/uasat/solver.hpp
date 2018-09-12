@@ -40,11 +40,23 @@ public:
   Logic(literal_t TRUE) : TRUE(TRUE), FALSE(-TRUE) {}
   virtual ~Logic() = default;
 
-  static literal_t lnot(literal_t a) { return -a; }
-  virtual literal_t land(literal_t a, literal_t b) { return -lor(-a, -b); }
-  virtual literal_t lor(literal_t a, literal_t b) { return -land(-a, -b); }
-  virtual literal_t ladd(literal_t a, literal_t b) { return lxor(a, -b); }
-  virtual literal_t lxor(literal_t a, literal_t b) { return ladd(a, -b); }
+  static literal_t logic_not(literal_t a) { return -a; }
+
+  virtual literal_t logic_and(literal_t a, literal_t b) {
+    return -logic_or(-a, -b);
+  }
+
+  virtual literal_t logic_or(literal_t a, literal_t b) {
+    return -logic_and(-a, -b);
+  }
+
+  virtual literal_t logic_add(literal_t a, literal_t b) {
+    return logic_xor(a, -b);
+  }
+
+  virtual literal_t logic_xor(literal_t a, literal_t b) {
+    return logic_add(a, -b);
+  }
 };
 
 extern const std::shared_ptr<Logic> BOOLEAN;
@@ -70,8 +82,8 @@ public:
   virtual bool solve() = 0;
   virtual bool get_value(literal_t) const = 0;
 
-  virtual literal_t land(literal_t a, literal_t b) override;
-  virtual literal_t ladd(literal_t a, literal_t b) override;
+  virtual literal_t logic_and(literal_t a, literal_t b) override;
+  virtual literal_t logic_add(literal_t a, literal_t b) override;
 };
 
 } // namespace uasat

@@ -20,6 +20,7 @@
  * IN THE SOFTWARE.
  */
 
+#include <cassert>
 #include <limits>
 #include <stdexcept>
 
@@ -27,45 +28,197 @@
 
 namespace uasat {
 
-int get_initial_length(const std::vector<int> &shape) {
-  long length = 1;
+size_t get_storage_size(const std::vector<int> &shape) {
+  size_t size = 1;
   for (int dim : shape) {
-    if (dim < 0)
-      throw new std::invalid_argument("dimensions must be non-negative");
-    length *= dim;
-    if (length > std::numeric_limits<int>::max())
-      throw new std::invalid_argument("tensor length is too big");
+    if (dim <= 0)
+      throw std::invalid_argument("dimensions must be positive");
+    if (size > std::numeric_limits<size_t>::max() / dim)
+      throw std::invalid_argument("tensor size is too big");
+    size *= dim;
   }
-  return length;
+  return size;
 }
 
-std::vector<int> get_initial_strides(const std::vector<int> &shape) {
-  std::vector<int> strides(shape.size());
+Tensor::Tensor(const std::shared_ptr<Logic> &logic,
+               const std::vector<int> &shape)
+    : logic(logic), shape(shape), storage(get_storage_size(shape)) {}
+
+std::unique_ptr<const Tensor>
+Tensor::variable(const std::shared_ptr<Solver> &solver,
+                 const std::vector<int> &shape, bool decision) {
+  std::unique_ptr<Tensor> new_tensor(new Tensor(solver, shape));
+
+  std::vector<int> &new_storage = new_tensor->storage;
+  for (size_t i = 0; i < new_storage.size(); i++)
+    new_storage[i] = solver->add_variable(decision);
+
+  return new_tensor;
+}
+
+std::unique_ptr<const Tensor>
+Tensor::constant(const std::shared_ptr<Logic> &logic,
+                 const std::vector<int> &shape, literal_t literal) {
+  std::unique_ptr<Tensor> new_tensor(new Tensor(logic, shape));
+
+  std::vector<int> &new_storage = new_tensor->storage;
+  for (size_t i = 0; i < new_storage.size(); i++)
+    new_storage[i] = literal;
+
+  return new_tensor;
+}
+
+std::unique_ptr<const Tensor> Tensor::permute(const Tensor *old_tensor,
+                                              const std::vector<int> &new_shape,
+                                              const std::vector<int> &mapping) {
+  const std::vector<int> &old_shape = old_tensor->shape;
+  const std::vector<literal_t> &old_storage = old_tensor->storage;
+
+  if (old_shape.size() != mapping.size())
+    throw std::invalid_argument("invalid coordinate mapping size");
+
+  std::unique_ptr<Tensor> new_tensor(new Tensor(old_tensor->logic, new_shape));
+  std::vector<literal_t> &new_storage = new_tensor->storage;
+
   int length = 1;
-  for (size_t i = 0; i < shape.size(); i++) {
-    strides[i] = length;
-    length *= shape[i];
+  std::vector<int> stride(new_shape.size(), 0);
+  for (size_t i = 0; i < old_shape.size(); i++) {
+    if (mapping[i] < 0 || (size_t)mapping[i] > new_shape.size())
+      throw std::invalid_argument("invalid coordinate mapping index");
+    if (old_shape[i] != new_shape[mapping[i]])
+      throw std::invalid_argument("invalid coordinate mapping value");
+
+    stride[mapping[i]] += length;
+    length *= old_shape[i];
   }
-  return strides;
+
+  std::vector<int> new_coord(new_shape.size(), 0);
+  size_t old_index = 0;
+  for (size_t new_index = 0; new_index < new_storage.size(); new_index++) {
+    new_storage[new_index] = old_storage[old_index];
+    for (size_t i = 0; i < new_coord.size();) {
+      old_index += stride[i];
+      if (++new_coord[i] < new_shape[i])
+        break;
+      old_index -= stride[i] * new_shape[i];
+      new_coord[i++] = 0;
+    }
+  }
+
+  for (size_t i = 0; i < new_coord.size(); i++)
+    assert(new_coord[i] == 0);
+
+  return new_tensor;
 }
 
-Tensor::Tensor(const std::vector<int> &shape,
-               const std::shared_ptr<Logic> &logic)
-    : shape(shape), length(get_initial_length(shape)), logic(logic),
-      strides(get_initial_strides(shape)),
-      storage(std::make_shared<std::vector<literal_t>>(length)) {}
+std::unique_ptr<const Tensor> Tensor::logic_not(const Tensor *tensor) {
+  std::unique_ptr<Tensor> new_tensor(new Tensor(tensor->logic, tensor->shape));
 
-std::unique_ptr<Tensor>
-Tensor::create_variables(const std::vector<int> &shape,
-                         const std::shared_ptr<Solver> &solver, bool decision) {
-  std::unique_ptr<Tensor> tensor(new Tensor(shape, solver));
+  const std::vector<int> &storage = tensor->storage;
+  std::vector<int> &new_storage = new_tensor->storage;
+  Logic *logic = tensor->logic.get();
 
-  size_t size = tensor->storage->size();
-  literal_t *elements = tensor->storage->data();
-  for (size_t i = 0; i < size; i++)
-    elements[i] = solver->add_variable(decision);
+  for (size_t i = 0; i < new_storage.size(); i++)
+    new_storage[i] = logic->logic_not(storage[i]);
 
-  return tensor;
+  return new_tensor;
+}
+
+std::unique_ptr<const Tensor> Tensor::logic_and(const Tensor *tensor1,
+                                                const Tensor *tensor2) {
+  if (tensor1->logic != tensor2->logic)
+    throw std::invalid_argument("non-matching logic");
+  if (tensor1->shape != tensor2->shape)
+    throw std::invalid_argument("non-matching shape");
+
+  std::unique_ptr<Tensor> new_tensor(
+      new Tensor(tensor1->logic, tensor1->shape));
+
+  const std::vector<int> &storage1 = tensor1->storage;
+  const std::vector<int> &storage2 = tensor2->storage;
+  std::vector<int> &new_storage = new_tensor->storage;
+  Logic *logic = tensor1->logic.get();
+
+  for (size_t i = 0; i < new_storage.size(); i++)
+    new_storage[i] = logic->logic_and(storage1[i], storage2[i]);
+
+  return new_tensor;
+}
+
+std::unique_ptr<const Tensor> Tensor::logic_or(const Tensor *tensor1,
+                                               const Tensor *tensor2) {
+  if (tensor1->logic != tensor2->logic)
+    throw std::invalid_argument("non-matching logic");
+  if (tensor1->shape != tensor2->shape)
+    throw std::invalid_argument("non-matching shape");
+
+  std::unique_ptr<Tensor> new_tensor(
+      new Tensor(tensor1->logic, tensor1->shape));
+
+  const std::vector<int> &storage1 = tensor1->storage;
+  const std::vector<int> &storage2 = tensor2->storage;
+  std::vector<int> &new_storage = new_tensor->storage;
+  Logic *logic = tensor1->logic.get();
+
+  for (size_t i = 0; i < new_storage.size(); i++)
+    new_storage[i] = logic->logic_or(storage1[i], storage2[i]);
+
+  return new_tensor;
+}
+
+std::unique_ptr<const Tensor> Tensor::logic_add(const Tensor *tensor1,
+                                                const Tensor *tensor2) {
+  if (tensor1->logic != tensor2->logic)
+    throw std::invalid_argument("non-matching logic");
+  if (tensor1->shape != tensor2->shape)
+    throw std::invalid_argument("non-matching shape");
+
+  std::unique_ptr<Tensor> new_tensor(
+      new Tensor(tensor1->logic, tensor1->shape));
+
+  const std::vector<int> &storage1 = tensor1->storage;
+  const std::vector<int> &storage2 = tensor2->storage;
+  std::vector<int> &new_storage = new_tensor->storage;
+  Logic *logic = tensor1->logic.get();
+
+  for (size_t i = 0; i < new_storage.size(); i++)
+    new_storage[i] = logic->logic_add(storage1[i], storage2[i]);
+
+  return new_tensor;
+}
+
+std::unique_ptr<const Tensor> Tensor::logic_xor(const Tensor *tensor1,
+                                                const Tensor *tensor2) {
+  if (tensor1->logic != tensor2->logic)
+    throw std::invalid_argument("non-matching logic");
+  if (tensor1->shape != tensor2->shape)
+    throw std::invalid_argument("non-matching shape");
+
+  std::unique_ptr<Tensor> new_tensor(
+      new Tensor(tensor1->logic, tensor1->shape));
+
+  const std::vector<int> &storage1 = tensor1->storage;
+  const std::vector<int> &storage2 = tensor2->storage;
+  std::vector<int> &new_storage = new_tensor->storage;
+  Logic *logic = tensor1->logic.get();
+
+  for (size_t i = 0; i < new_storage.size(); i++)
+    new_storage[i] = logic->logic_xor(storage1[i], storage2[i]);
+
+  return new_tensor;
+}
+
+std::ostream &operator<<(std::ostream &out, const Tensor *tensor) {
+  const std::vector<literal_t> &storage = tensor->storage;
+
+  out << '[';
+  for (size_t i = 0; i < storage.size(); i++) {
+    if (i != 0)
+      out << ',';
+    out << storage[i];
+  }
+  out << ']';
+  return out;
 }
 
 } // namespace uasat

@@ -41,14 +41,14 @@ int validate(int size) {
   for (int i = 0; i < size; i++)
     for (int j = 0; j < size; j++)
       solver->add_clause(table[i * size + j],
-                         solver->lnot(table[j * size + i]));
+                         solver->logic_not(table[j * size + i]));
 
   // transitive
   for (int i = 0; i < size; i++)
     for (int j = 0; j < size; j++)
       for (int k = 0; k < size; k++)
-        solver->add_clause(solver->lnot(table[i * size + j]),
-                           solver->lnot(table[j * size + k]),
+        solver->add_clause(solver->logic_not(table[i * size + j]),
+                           solver->logic_not(table[j * size + k]),
                            table[i * size + k]);
 
   std::vector<uasat::literal_t> clause(size * size);
@@ -57,7 +57,7 @@ int validate(int size) {
     count += 1;
     for (size_t i = 0; i < table.size(); i++) {
       bool b = solver->get_value(table[i]);
-      clause[i] = b ? solver->lnot(table[i]) : table[i];
+      clause[i] = b ? solver->logic_not(table[i]) : table[i];
     }
     solver->add_clause(clause);
   }

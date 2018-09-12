@@ -29,11 +29,11 @@ class Boolean : public Logic {
 public:
   Boolean() : Logic(1) {}
 
-  virtual literal_t land(literal_t a, literal_t b) override {
+  virtual literal_t logic_and(literal_t a, literal_t b) override {
     return a <= b ? a : b;
   }
 
-  virtual literal_t ladd(literal_t a, literal_t b) override {
+  virtual literal_t logic_add(literal_t a, literal_t b) override {
     literal_t s = a ^ b;          // sign(a*b)
     a = a < 0 ? -a : a;           // abs(a)
     b = b < 0 ? -b : b;           // abs(b)
@@ -51,7 +51,7 @@ std::shared_ptr<Solver> Solver::create(const std::string &options) {
   throw std::invalid_argument("invalid solver");
 }
 
-literal_t Solver::land(literal_t a, literal_t b) {
+literal_t Solver::logic_and(literal_t a, literal_t b) {
   if (a == FALSE || b == FALSE)
     return FALSE;
   else if (a == TRUE)
@@ -60,35 +60,35 @@ literal_t Solver::land(literal_t a, literal_t b) {
     return a;
   else if (a == b)
     return a;
-  else if (a == lnot(b))
+  else if (a == logic_not(b))
     return FALSE;
 
   literal_t c = add_variable(false);
-  add_clause(a, lnot(c));
-  add_clause(b, lnot(c));
-  add_clause(lnot(a), lnot(b), c);
+  add_clause(a, logic_not(c));
+  add_clause(b, logic_not(c));
+  add_clause(logic_not(a), logic_not(b), c);
   return c;
 }
 
-literal_t Solver::ladd(literal_t a, literal_t b) {
+literal_t Solver::logic_add(literal_t a, literal_t b) {
   if (a == FALSE)
     return b;
   else if (b == FALSE)
     return a;
   else if (a == TRUE)
-    return lnot(b);
+    return logic_not(b);
   else if (b == TRUE)
-    return lnot(a);
+    return logic_not(a);
   else if (a == b)
     return FALSE;
-  else if (a == lnot(b))
+  else if (a == logic_not(b))
     return TRUE;
 
   literal_t c = add_variable(false);
-  add_clause(a, b, lnot(c));
-  add_clause(lnot(a), b, c);
-  add_clause(a, lnot(b), c);
-  add_clause(lnot(a), lnot(b), lnot(c));
+  add_clause(a, b, logic_not(c));
+  add_clause(logic_not(a), b, c);
+  add_clause(a, logic_not(b), c);
+  add_clause(logic_not(a), logic_not(b), logic_not(c));
   return c;
 }
 
