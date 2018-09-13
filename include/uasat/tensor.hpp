@@ -39,6 +39,21 @@ protected:
 
   Tensor(const std::shared_ptr<Logic> &logic, const std::vector<int> &shape);
 
+  /**
+   * Performs the given generic binary logic operation on the two tensors.
+   */
+  static std::unique_ptr<const Tensor>
+  logic_bin(literal_t (Logic::*op)(literal_t, literal_t), const Tensor *tensor1,
+            const Tensor *tensor2);
+
+  /**
+   * Performs the given generic fold operation on the given tensor,
+   * at the selected coordinate.
+   */
+  static std::unique_ptr<const Tensor>
+  fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &),
+           const Tensor *tensor, const std::vector<bool> &selection);
+
 public:
   /**
    * Creates a new tensor with the given shape with fresh variables from
@@ -89,7 +104,9 @@ public:
    * the logical and of the corresponding literals.
    */
   static std::unique_ptr<const Tensor> logic_and(const Tensor *tensor1,
-                                                 const Tensor *tensor2);
+                                                 const Tensor *tensor2) {
+    return Tensor::logic_bin(&Logic::logic_and, tensor1, tensor2);
+  }
 
   static std::unique_ptr<const Tensor>
   logic_and(const std::unique_ptr<const Tensor> &tensor1,
@@ -107,7 +124,9 @@ public:
    * the logical or of the corresponding literals.
    */
   static std::unique_ptr<const Tensor> logic_or(const Tensor *tensor1,
-                                                const Tensor *tensor2);
+                                                const Tensor *tensor2) {
+    return Tensor::logic_bin(&Logic::logic_or, tensor1, tensor2);
+  }
 
   static std::unique_ptr<const Tensor>
   logic_or(const std::unique_ptr<const Tensor> &tensor1,
@@ -125,7 +144,9 @@ public:
    * the logical sum of the corresponding literals.
    */
   static std::unique_ptr<const Tensor> logic_add(const Tensor *tensor1,
-                                                 const Tensor *tensor2);
+                                                 const Tensor *tensor2) {
+    return Tensor::logic_bin(&Logic::logic_add, tensor1, tensor2);
+  }
 
   static std::unique_ptr<const Tensor>
   logic_add(const std::unique_ptr<const Tensor> &tensor1,
@@ -143,7 +164,9 @@ public:
    * the logical xor of the corresponding literals.
    */
   static std::unique_ptr<const Tensor> logic_xor(const Tensor *tensor1,
-                                                 const Tensor *tensor2);
+                                                 const Tensor *tensor2) {
+    return Tensor::logic_bin(&Logic::logic_xor, tensor1, tensor2);
+  }
 
   static std::unique_ptr<const Tensor>
   logic_xor(const std::unique_ptr<const Tensor> &tensor1,

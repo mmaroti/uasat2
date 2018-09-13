@@ -124,8 +124,9 @@ std::unique_ptr<const Tensor> Tensor::logic_not(const Tensor *tensor) {
   return new_tensor;
 }
 
-std::unique_ptr<const Tensor> Tensor::logic_and(const Tensor *tensor1,
-                                                const Tensor *tensor2) {
+std::unique_ptr<const Tensor>
+Tensor::logic_bin(literal_t (Logic::*op)(literal_t, literal_t),
+                  const Tensor *tensor1, const Tensor *tensor2) {
   if (tensor1->logic != tensor2->logic)
     throw std::invalid_argument("non-matching logic");
   if (tensor1->shape != tensor2->shape)
@@ -140,72 +141,50 @@ std::unique_ptr<const Tensor> Tensor::logic_and(const Tensor *tensor1,
   Logic *logic = tensor1->logic.get();
 
   for (size_t i = 0; i < new_storage.size(); i++)
-    new_storage[i] = logic->logic_and(storage1[i], storage2[i]);
+    new_storage[i] = (logic->*op)(storage1[i], storage2[i]);
 
   return new_tensor;
 }
 
-std::unique_ptr<const Tensor> Tensor::logic_or(const Tensor *tensor1,
-                                               const Tensor *tensor2) {
-  if (tensor1->logic != tensor2->logic)
-    throw std::invalid_argument("non-matching logic");
-  if (tensor1->shape != tensor2->shape)
-    throw std::invalid_argument("non-matching shape");
+std::unique_ptr<const Tensor>
+Tensor::fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &),
+                 const Tensor *tensor, const std::vector<bool> &selection) {
+  const std::vector<int> &old_shape = tensor->shape;
 
-  std::unique_ptr<Tensor> new_tensor(
-      new Tensor(tensor1->logic, tensor1->shape));
+  if (selection.size() != old_shape.size())
+    throw std::invalid_argument("invalid fold selection");
 
-  const std::vector<int> &storage1 = tensor1->storage;
-  const std::vector<int> &storage2 = tensor2->storage;
-  std::vector<int> &new_storage = new_tensor->storage;
-  Logic *logic = tensor1->logic.get();
+  int old_length = 1;
+  std::vector<int> new_shape;
+  std::vector<int> fold_shape;
+  std::vector<int> fold_stride;
+  int fold_length = 1;
+  for (size_t i = 0; i < selection.size(); i++) {
+    if (selection[i]) {
+      fold_shape.push_back(old_shape[i]);
+      fold_stride.push_back(old_length);
+      fold_length *= old_shape[i];
+    } else
+      new_shape.push_back(old_shape[i]);
+    old_length *= old_shape[i];
+  }
 
-  for (size_t i = 0; i < new_storage.size(); i++)
-    new_storage[i] = logic->logic_or(storage1[i], storage2[i]);
+  std::vector<int> fold_index(fold_length);
+  std::vector<int> fold_coord(fold_length, 0);
+  int index = 0;
+  for (size_t pos = 0; pos < fold_index.size(); pos++) {
+    fold_index[pos] = index;
+    for (size_t i = 0; i < fold_coord.size();) {
+      index += fold_stride[i];
+      if (++fold_coord[i] < fold_shape[i])
+        break;
+      index -= fold_stride[i] * fold_shape[i];
+      fold_coord[i++] = 0;
+    }
+  }
 
-  return new_tensor;
-}
-
-std::unique_ptr<const Tensor> Tensor::logic_add(const Tensor *tensor1,
-                                                const Tensor *tensor2) {
-  if (tensor1->logic != tensor2->logic)
-    throw std::invalid_argument("non-matching logic");
-  if (tensor1->shape != tensor2->shape)
-    throw std::invalid_argument("non-matching shape");
-
-  std::unique_ptr<Tensor> new_tensor(
-      new Tensor(tensor1->logic, tensor1->shape));
-
-  const std::vector<int> &storage1 = tensor1->storage;
-  const std::vector<int> &storage2 = tensor2->storage;
-  std::vector<int> &new_storage = new_tensor->storage;
-  Logic *logic = tensor1->logic.get();
-
-  for (size_t i = 0; i < new_storage.size(); i++)
-    new_storage[i] = logic->logic_add(storage1[i], storage2[i]);
-
-  return new_tensor;
-}
-
-std::unique_ptr<const Tensor> Tensor::logic_xor(const Tensor *tensor1,
-                                                const Tensor *tensor2) {
-  if (tensor1->logic != tensor2->logic)
-    throw std::invalid_argument("non-matching logic");
-  if (tensor1->shape != tensor2->shape)
-    throw std::invalid_argument("non-matching shape");
-
-  std::unique_ptr<Tensor> new_tensor(
-      new Tensor(tensor1->logic, tensor1->shape));
-
-  const std::vector<int> &storage1 = tensor1->storage;
-  const std::vector<int> &storage2 = tensor2->storage;
-  std::vector<int> &new_storage = new_tensor->storage;
-  Logic *logic = tensor1->logic.get();
-
-  for (size_t i = 0; i < new_storage.size(); i++)
-    new_storage[i] = logic->logic_xor(storage1[i], storage2[i]);
-
-  return new_tensor;
+  for (size_t i = 0; i < fold_coord.size(); i++)
+    assert(fold_coord[i] == 0);
 }
 
 std::ostream &operator<<(std::ostream &out, const Tensor *tensor) {
