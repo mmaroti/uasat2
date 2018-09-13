@@ -31,6 +31,7 @@ namespace uasat {
 
 class Tensor {
 public:
+  typedef int index_t;
   const std::shared_ptr<Logic> logic;
   const std::vector<int> shape;
 
@@ -163,20 +164,39 @@ public:
    * Creates a new tensor from the given pair of tensors whose entries are
    * the logical xor of the corresponding literals.
    */
-  static std::unique_ptr<const Tensor> logic_xor(const Tensor *tensor1,
+  static std::unique_ptr<const Tensor> logic_equ(const Tensor *tensor1,
                                                  const Tensor *tensor2) {
-    return Tensor::logic_bin(&Logic::logic_xor, tensor1, tensor2);
+    return Tensor::logic_bin(&Logic::logic_equ, tensor1, tensor2);
   }
 
   static std::unique_ptr<const Tensor>
-  logic_xor(const std::unique_ptr<const Tensor> &tensor1,
+  logic_equ(const std::unique_ptr<const Tensor> &tensor1,
             const std::unique_ptr<const Tensor> &tensor2) {
-    return Tensor::logic_xor(tensor1.get(), tensor2.get());
+    return Tensor::logic_equ(tensor1.get(), tensor2.get());
   }
 
   std::unique_ptr<const Tensor>
-  logic_xor(const std::unique_ptr<const Tensor> &tensor2) const {
-    return Tensor::logic_xor(this, tensor2.get());
+  logic_equ(const std::unique_ptr<const Tensor> &tensor2) const {
+    return Tensor::logic_equ(this, tensor2.get());
+  }
+
+  /**
+   * Fold the given tensor along the selected dimensions using the logical and
+   * operation.
+   */
+  static std::unique_ptr<const Tensor>
+  fold_and(const Tensor *tensor, const std::vector<bool> &selection) {
+    return Tensor::fold_bin(&Logic::fold_and, tensor, selection);
+  }
+
+  std::unique_ptr<const Tensor>
+  fold_and(const std::vector<bool> &selection) const {
+    return Tensor::fold_and(this, selection);
+  }
+
+  literal_t get() const {
+    // assert(shape.size() == 0);
+    return storage[0];
   }
 
   /**

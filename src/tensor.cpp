@@ -28,12 +28,71 @@
 
 namespace uasat {
 
-size_t get_storage_size(const std::vector<int> &shape) {
-  size_t size = 1;
-  for (int dim : shape) {
+class IndexView {
+private:
+  typedef int index_t;
+
+  index_t base_index = 0;
+  index_t view_index = 0;
+  index_t view_size = 1;
+
+  struct dimension_t {
+    dimension_t(index_t size, index_t stride, index_t index)
+        : size(size), stride(stride), index(index) {}
+    index_t size;
+    index_t stride;
+    index_t index;
+  };
+
+  std::vector<dimension_t> dimensions;
+
+public:
+  void add_dimension(index_t size, index_t stride) {
+    assert(size > 0);
+    if (!dimensions.empty() &&
+        dimensions.back().size * dimensions.back().stride == stride) {
+      dimensions.back().size *= size;
+    } else {
+      dimensions.emplace_back(size, stride, 0);
+    }
+    assert(view_size <= std::numeric_limits<index_t>::max() / size);
+    view_size *= size;
+  }
+
+  void reset() {
+    base_index = 0;
+    view_index = 0;
+    for (dimension_t &dim : dimensions)
+      dim.index = 0;
+  }
+
+  bool increment() {
+    view_index += 1;
+    for (dimension_t &dim : dimensions) {
+      base_index += dim.stride;
+      if (++dim.index < dim.size)
+        return true;
+      dim.index = 0;
+      base_index -= dim.stride * dim.size;
+    }
+    assert(base_index == 0);
+    assert(view_index == view_size);
+    view_index = 0;
+    return false;
+  }
+
+  index_t get_base_index() const { return base_index; }
+  index_t get_view_index() const { return view_index; }
+  index_t get_view_size() const { return view_size; }
+};
+
+std::size_t get_storage_size(const std::vector<Tensor::index_t> &shape) {
+  assert(sizeof(Tensor::index_t) <= sizeof(std::size_t));
+  Tensor::index_t size = 1;
+  for (Tensor::index_t dim : shape) {
     if (dim <= 0)
       throw std::invalid_argument("dimensions must be positive");
-    if (size > std::numeric_limits<size_t>::max() / dim)
+    if (size > std::numeric_limits<Tensor::index_t>::max() / dim)
       throw std::invalid_argument("tensor size is too big");
     size *= dim;
   }
@@ -149,49 +208,47 @@ Tensor::logic_bin(literal_t (Logic::*op)(literal_t, literal_t),
 std::unique_ptr<const Tensor>
 Tensor::fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &),
                  const Tensor *tensor, const std::vector<bool> &selection) {
-  const std::vector<int> &old_shape = tensor->shape;
-
-  if (selection.size() != old_shape.size())
+  if (selection.size() != tensor->shape.size())
     throw std::invalid_argument("invalid fold selection");
 
-  int old_length = 1;
-  std::vector<int> new_shape;
-  std::vector<int> fold_shape;
-  std::vector<int> fold_stride;
-  int fold_length = 1;
-  for (size_t i = 0; i < selection.size(); i++) {
-    if (selection[i]) {
-      fold_shape.push_back(old_shape[i]);
-      fold_stride.push_back(old_length);
-      fold_length *= old_shape[i];
-    } else
-      new_shape.push_back(old_shape[i]);
-    old_length *= old_shape[i];
-  }
-
-  std::vector<int> fold_index(fold_length);
-  std::vector<int> fold_coord(fold_length, 0);
-  int index = 0;
-  for (size_t pos = 0; pos < fold_index.size(); pos++) {
-    fold_index[pos] = index;
-    for (size_t i = 0; i < fold_coord.size();) {
-      index += fold_stride[i];
-      if (++fold_coord[i] < fold_shape[i])
-        break;
-      index -= fold_stride[i] * fold_shape[i];
-      fold_coord[i++] = 0;
+  std::vector<index_t> scan_shape;
+  IndexView fold_view;
+  IndexView scan_view;
+  index_t length = 1;
+  for (std::size_t i = 0; i < selection.size(); i++) {
+    if (selection[i])
+      fold_view.add_dimension(tensor->shape[i], length);
+    else {
+      scan_view.add_dimension(tensor->shape[i], length);
+      scan_shape.emplace_back(tensor->shape[i]);
     }
+    length *= tensor->shape[i];
   }
 
-  for (size_t i = 0; i < fold_coord.size(); i++)
-    assert(fold_coord[i] == 0);
+  Logic *logic = tensor->logic.get();
+  const std::vector<literal_t> &storage = tensor->storage;
+  std::unique_ptr<Tensor> scan_tensor(new Tensor(tensor->logic, scan_shape));
+  std::vector<literal_t> &scan_storage = scan_tensor->storage;
+  assert(scan_storage.size() == (std::size_t)scan_view.get_view_size());
+  std::vector<literal_t> fold_storage(fold_view.get_view_size());
+
+  do {
+    index_t scan_base_index = scan_view.get_base_index();
+    do {
+      fold_storage[fold_view.get_view_index()] =
+          storage[scan_base_index + fold_view.get_base_index()];
+    } while (fold_view.increment());
+    scan_storage[scan_view.get_view_index()] = (logic->*op)(fold_storage);
+  } while (scan_view.increment());
+
+  return scan_tensor;
 }
 
 std::ostream &operator<<(std::ostream &out, const Tensor *tensor) {
   const std::vector<literal_t> &storage = tensor->storage;
 
   out << '[';
-  for (size_t i = 0; i < storage.size(); i++) {
+  for (std::size_t i = 0; i < storage.size(); i++) {
     if (i != 0)
       out << ',';
     out << storage[i];

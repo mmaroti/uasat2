@@ -25,21 +25,21 @@
 
 namespace uasat {
 
-literal_t Logic::fold_and(std::vector<literal_t> as) {
+literal_t Logic::fold_and(const std::vector<literal_t> &as) {
   literal_t b = TRUE;
   for (literal_t a : as)
     b = logic_and(b, a);
   return b;
 }
 
-literal_t Logic::fold_or(std::vector<literal_t> as) {
+literal_t Logic::fold_or(const std::vector<literal_t> &as) {
   literal_t b = FALSE;
   for (literal_t a : as)
     b = logic_or(b, a);
   return b;
 }
 
-literal_t Logic::fold_add(std::vector<literal_t> as) {
+literal_t Logic::fold_add(const std::vector<literal_t> &as) {
   literal_t b = TRUE;
   for (literal_t a : as)
     b = logic_add(b, a);

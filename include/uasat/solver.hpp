@@ -51,16 +51,16 @@ public:
   }
 
   virtual literal_t logic_add(literal_t a, literal_t b) {
-    return logic_xor(a, -b);
+    return logic_equ(a, -b);
   }
 
-  virtual literal_t logic_xor(literal_t a, literal_t b) {
+  virtual literal_t logic_equ(literal_t a, literal_t b) {
     return logic_add(a, -b);
   }
 
-  literal_t fold_and(std::vector<literal_t> as);
-  literal_t fold_or(std::vector<literal_t> as);
-  literal_t fold_add(std::vector<literal_t> as);
+  literal_t fold_and(const std::vector<literal_t> &as);
+  literal_t fold_or(const std::vector<literal_t> &as);
+  literal_t fold_add(const std::vector<literal_t> &as);
 };
 
 extern const std::shared_ptr<Logic> BOOLEAN;

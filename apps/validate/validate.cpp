@@ -24,8 +24,9 @@
 #include <iostream>
 
 #include "uasat/solver.hpp"
+#include "uasat/tensor.hpp"
 
-int validate(int size) {
+int validate1(int size) {
   std::shared_ptr<uasat::Solver> solver = uasat::Solver::create();
 
   // create binary relation
@@ -65,11 +66,42 @@ int validate(int size) {
   return count;
 }
 
+int validate2(int size) {
+  std::shared_ptr<uasat::Solver> solver = uasat::Solver::create();
+
+  // create binary relation
+  std::unique_ptr<const uasat::Tensor> tensor =
+      uasat::Tensor::variable(solver, {size, size});
+
+  uasat::literal_t reflexive =
+      tensor->permute({size}, {0, 0})->fold_and({true})->get();
+
+  uasat::literal_t symmetric =
+      tensor->logic_equ(tensor->permute({size, size}, {1, 0}))
+          ->fold_and({true, true})
+          ->get();
+
+  std::vector<uasat::literal_t> clause(size * size);
+  int count = 0;
+  /*
+  while (solver->solve()) {
+    count += 1;
+    for (size_t i = 0; i < table.size(); i++) {
+      bool b = solver->get_value(table[i]);
+      clause[i] = b ? solver->logic_not(table[i]) : table[i];
+    }
+    solver->add_clause(clause);
+  }
+  */
+
+  return count;
+}
+
 int main() {
   std::cout << "Calculating the 8th Bell number (4140 solutions): ";
 
   auto start = std::chrono::steady_clock::now();
-  int result = validate(8);
+  int result = validate1(8);
   int msecs = std::chrono::duration_cast<std::chrono::milliseconds>(
                   std::chrono::steady_clock::now() - start)
                   .count();
