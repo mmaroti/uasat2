@@ -25,21 +25,21 @@
 
 namespace uasat {
 
-literal_t Logic::fold_and(const std::vector<literal_t> &as) {
+literal_t Logic::fold_all(const std::vector<literal_t> &as) {
   literal_t b = TRUE;
   for (literal_t a : as)
     b = logic_and(b, a);
   return b;
 }
 
-literal_t Logic::fold_or(const std::vector<literal_t> &as) {
+literal_t Logic::fold_any(const std::vector<literal_t> &as) {
   literal_t b = FALSE;
   for (literal_t a : as)
     b = logic_or(b, a);
   return b;
 }
 
-literal_t Logic::fold_add(const std::vector<literal_t> &as) {
+literal_t Logic::fold_sum(const std::vector<literal_t> &as) {
   literal_t b = TRUE;
   for (literal_t a : as)
     b = logic_add(b, a);
@@ -48,8 +48,6 @@ literal_t Logic::fold_add(const std::vector<literal_t> &as) {
 
 class Boolean : public Logic {
 public:
-  Boolean() : Logic(1) {}
-
   virtual literal_t logic_and(literal_t a, literal_t b) override {
     return a <= b ? a : b;
   }

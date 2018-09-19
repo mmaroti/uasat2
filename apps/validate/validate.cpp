@@ -57,8 +57,8 @@ int validate1(int size) {
   while (solver->solve()) {
     count += 1;
     for (size_t i = 0; i < table.size(); i++) {
-      bool b = solver->get_value(table[i]);
-      clause[i] = b ? solver->logic_not(table[i]) : table[i];
+      uasat::literal_t b = solver->get_solution(table[i]);
+      clause[i] = b == solver->TRUE ? solver->logic_not(table[i]) : table[i];
     }
     solver->add_clause(clause);
   }
@@ -70,28 +70,29 @@ int validate2(int size) {
   std::shared_ptr<uasat::Solver> solver = uasat::Solver::create();
 
   // create binary relation
-  std::unique_ptr<const uasat::Tensor> tensor =
+  std::shared_ptr<const uasat::Tensor> relation =
       uasat::Tensor::variable(solver, {size, size});
 
-  uasat::literal_t reflexive =
-      tensor->permute({size}, {0, 0})->fold_and({true})->get();
+  uasat::literal_t reflexive = relation->permute({size}, {0, 0})->fold_all();
 
   uasat::literal_t symmetric =
-      tensor->logic_equ(tensor->permute({size, size}, {1, 0}))
-          ->fold_and({true, true})
-          ->get();
+      relation->logic_leq(relation->permute({size, size}, {1, 0}))->fold_all();
 
-  std::vector<uasat::literal_t> clause(size * size);
+  uasat::literal_t transitive =
+      relation->permute({size, size, size}, {1, 0})
+          ->logic_and(relation->permute({size, size, size}, {0, 2}))
+          ->fold_any({true, false, false})
+          ->fold_all();
+
+  uasat::literal_t equivalence =
+      solver->fold_all({reflexive, symmetric, transitive});
+
   int count = 0;
   /*
-  while (solver->solve()) {
-    count += 1;
-    for (size_t i = 0; i < table.size(); i++) {
-      bool b = solver->get_value(table[i]);
-      clause[i] = b ? solver->logic_not(table[i]) : table[i];
+    while (solver->solve()) {
+      count += 1;
+      relation->get_solution();
     }
-    solver->add_clause(clause);
-  }
   */
 
   return count;

@@ -38,12 +38,14 @@ public:
 protected:
   std::vector<literal_t> storage;
 
+public:
   Tensor(const std::shared_ptr<Logic> &logic, const std::vector<int> &shape);
 
+protected:
   /**
    * Performs the given generic binary logic operation on the two tensors.
    */
-  static std::unique_ptr<const Tensor>
+  static std::shared_ptr<const Tensor>
   logic_bin(literal_t (Logic::*op)(literal_t, literal_t), const Tensor *tensor1,
             const Tensor *tensor2);
 
@@ -51,7 +53,7 @@ protected:
    * Performs the given generic fold operation on the given tensor,
    * at the selected coordinate.
    */
-  static std::unique_ptr<const Tensor>
+  static std::shared_ptr<const Tensor>
   fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &),
            const Tensor *tensor, const std::vector<bool> &selection);
 
@@ -60,14 +62,14 @@ public:
    * Creates a new tensor with the given shape with fresh variables from
    * the selected solver.
    */
-  static std::unique_ptr<const Tensor>
+  static std::shared_ptr<const Tensor>
   variable(const std::shared_ptr<Solver> &solver, const std::vector<int> &shape,
            bool decision = true);
 
   /**
    * Creates a new tensor with the given shape filled with the same literal.
    */
-  static std::unique_ptr<const Tensor>
+  static std::shared_ptr<const Tensor>
   constant(const std::shared_ptr<Logic> &logic, const std::vector<int> &shape,
            literal_t literal);
 
@@ -77,11 +79,11 @@ public:
    * of length of the old tensor shape with entries identifing the coordinate
    * in the new tensor.
    */
-  static std::unique_ptr<const Tensor> permute(const Tensor *tensor,
+  static std::shared_ptr<const Tensor> permute(const Tensor *tensor,
                                                const std::vector<int> &shape,
                                                const std::vector<int> &mapping);
 
-  std::unique_ptr<const Tensor> permute(const std::vector<int> &shape,
+  std::shared_ptr<const Tensor> permute(const std::vector<int> &shape,
                                         const std::vector<int> &mapping) const {
     return Tensor::permute(this, shape, mapping);
   }
@@ -89,14 +91,9 @@ public:
   /**
    * Creates a new tensor from the given tensor whose entries are negated.
    */
-  static std::unique_ptr<const Tensor> logic_not(const Tensor *tensor);
+  static std::shared_ptr<const Tensor> logic_not(const Tensor *tensor);
 
-  static std::unique_ptr<const Tensor>
-  logic_not(const std::unique_ptr<const Tensor> &tensor) {
-    return Tensor::logic_not(tensor.get());
-  }
-
-  std::unique_ptr<const Tensor> logic_not() const {
+  std::shared_ptr<const Tensor> logic_not() const {
     return Tensor::logic_not(this);
   }
 
@@ -104,19 +101,13 @@ public:
    * Creates a new tensor from the given pair of tensors whose entries are
    * the logical and of the corresponding literals.
    */
-  static std::unique_ptr<const Tensor> logic_and(const Tensor *tensor1,
+  static std::shared_ptr<const Tensor> logic_and(const Tensor *tensor1,
                                                  const Tensor *tensor2) {
     return Tensor::logic_bin(&Logic::logic_and, tensor1, tensor2);
   }
 
-  static std::unique_ptr<const Tensor>
-  logic_and(const std::unique_ptr<const Tensor> &tensor1,
-            const std::unique_ptr<const Tensor> &tensor2) {
-    return Tensor::logic_and(tensor1.get(), tensor2.get());
-  }
-
-  std::unique_ptr<const Tensor>
-  logic_and(const std::unique_ptr<const Tensor> &tensor2) const {
+  std::shared_ptr<const Tensor>
+  logic_and(const std::shared_ptr<const Tensor> &tensor2) const {
     return Tensor::logic_and(this, tensor2.get());
   }
 
@@ -124,39 +115,41 @@ public:
    * Creates a new tensor from the given pair of tensors whose entries are
    * the logical or of the corresponding literals.
    */
-  static std::unique_ptr<const Tensor> logic_or(const Tensor *tensor1,
+  static std::shared_ptr<const Tensor> logic_or(const Tensor *tensor1,
                                                 const Tensor *tensor2) {
     return Tensor::logic_bin(&Logic::logic_or, tensor1, tensor2);
   }
 
-  static std::unique_ptr<const Tensor>
-  logic_or(const std::unique_ptr<const Tensor> &tensor1,
-           const std::unique_ptr<const Tensor> &tensor2) {
-    return Tensor::logic_or(tensor1.get(), tensor2.get());
+  std::shared_ptr<const Tensor>
+  logic_or(const std::shared_ptr<const Tensor> &tensor2) const {
+    return Tensor::logic_or(this, tensor2.get());
   }
 
-  std::unique_ptr<const Tensor>
-  logic_or(const std::unique_ptr<const Tensor> &tensor2) const {
-    return Tensor::logic_or(this, tensor2.get());
+  /**
+   * Creates a new tensor from the given pair of tensors whose entries are
+   * the implication of the corresponding literals.
+   */
+  static std::shared_ptr<const Tensor> logic_leq(const Tensor *tensor1,
+                                                 const Tensor *tensor2) {
+    return Tensor::logic_bin(&Logic::logic_leq, tensor1, tensor2);
+  }
+
+  std::shared_ptr<const Tensor>
+  logic_leq(const std::shared_ptr<const Tensor> &tensor2) const {
+    return Tensor::logic_leq(this, tensor2.get());
   }
 
   /**
    * Creates a new tensor from the given pair of tensors whose entries are
    * the logical sum of the corresponding literals.
    */
-  static std::unique_ptr<const Tensor> logic_add(const Tensor *tensor1,
+  static std::shared_ptr<const Tensor> logic_add(const Tensor *tensor1,
                                                  const Tensor *tensor2) {
     return Tensor::logic_bin(&Logic::logic_add, tensor1, tensor2);
   }
 
-  static std::unique_ptr<const Tensor>
-  logic_add(const std::unique_ptr<const Tensor> &tensor1,
-            const std::unique_ptr<const Tensor> &tensor2) {
-    return Tensor::logic_add(tensor1.get(), tensor2.get());
-  }
-
-  std::unique_ptr<const Tensor>
-  logic_add(const std::unique_ptr<const Tensor> &tensor2) const {
+  std::shared_ptr<const Tensor>
+  logic_add(const std::shared_ptr<const Tensor> &tensor2) const {
     return Tensor::logic_add(this, tensor2.get());
   }
 
@@ -164,19 +157,13 @@ public:
    * Creates a new tensor from the given pair of tensors whose entries are
    * the logical xor of the corresponding literals.
    */
-  static std::unique_ptr<const Tensor> logic_equ(const Tensor *tensor1,
+  static std::shared_ptr<const Tensor> logic_equ(const Tensor *tensor1,
                                                  const Tensor *tensor2) {
     return Tensor::logic_bin(&Logic::logic_equ, tensor1, tensor2);
   }
 
-  static std::unique_ptr<const Tensor>
-  logic_equ(const std::unique_ptr<const Tensor> &tensor1,
-            const std::unique_ptr<const Tensor> &tensor2) {
-    return Tensor::logic_equ(tensor1.get(), tensor2.get());
-  }
-
-  std::unique_ptr<const Tensor>
-  logic_equ(const std::unique_ptr<const Tensor> &tensor2) const {
+  std::shared_ptr<const Tensor>
+  logic_equ(const std::shared_ptr<const Tensor> &tensor2) const {
     return Tensor::logic_equ(this, tensor2.get());
   }
 
@@ -184,31 +171,44 @@ public:
    * Fold the given tensor along the selected dimensions using the logical and
    * operation.
    */
-  static std::unique_ptr<const Tensor>
-  fold_and(const Tensor *tensor, const std::vector<bool> &selection) {
-    return Tensor::fold_bin(&Logic::fold_and, tensor, selection);
+  static std::shared_ptr<const Tensor>
+  fold_all(const Tensor *tensor, const std::vector<bool> &selection) {
+    return Tensor::fold_bin(&Logic::fold_all, tensor, selection);
   }
 
-  std::unique_ptr<const Tensor>
-  fold_and(const std::vector<bool> &selection) const {
-    return Tensor::fold_and(this, selection);
+  std::shared_ptr<const Tensor>
+  fold_all(const std::vector<bool> &selection) const {
+    return Tensor::fold_all(this, selection);
   }
 
-  literal_t get() const {
-    // assert(shape.size() == 0);
-    return storage[0];
+  literal_t fold_all() const { return logic->fold_all(storage); }
+
+  /**
+   * Fold the given tensor along the selected dimensions using the logical or
+   * operation.
+   */
+  static std::shared_ptr<const Tensor>
+  fold_any(const Tensor *tensor, const std::vector<bool> &selection) {
+    return Tensor::fold_bin(&Logic::fold_all, tensor, selection);
   }
+
+  std::shared_ptr<const Tensor>
+  fold_any(const std::vector<bool> &selection) const {
+    return Tensor::fold_any(this, selection);
+  }
+
+  literal_t fold_any() const { return logic->fold_any(storage); }
+
+  /**
+   * Returns the scalar value of a zero dimensional tensor.
+   */
+  literal_t get_scalar() const;
 
   /**
    * Prints out the tensor content without shape information.
    */
   friend std::ostream &operator<<(std::ostream &out, const Tensor *tensor);
 };
-
-inline std::ostream &operator<<(std::ostream &out,
-                                const std::unique_ptr<const Tensor> &tensor) {
-  return (out << tensor.get());
-}
 
 } // namespace uasat
 

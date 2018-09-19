@@ -34,7 +34,7 @@ inline Minisat::Lit gen2lit(literal_t lit) {
   return Minisat::toLit(lit > 0 ? (lit << 1) - 2 : ((-lit) << 1) - 1);
 }
 
-MiniSat::MiniSat() : Solver(1) { clear(); }
+MiniSat::MiniSat() { clear(); }
 
 MiniSat::~MiniSat() {}
 
@@ -88,10 +88,11 @@ bool MiniSat::solve() {
   return solvable;
 }
 
-bool MiniSat::get_value(literal_t lit) const {
+literal_t MiniSat::get_solution(literal_t lit) const {
   assert(solvable);
 
-  return solver->modelValue(gen2lit(lit)).isTrue();
+  Minisat::lbool value = solver->modelValue(gen2lit(lit));
+  return value.isTrue() ? TRUE : value.isFalse() ? FALSE : UNDEF;
 }
 
 } // namespace uasat

@@ -55,7 +55,7 @@ public:
   virtual unsigned long get_clauses() const override;
 
   virtual bool solve() override;
-  virtual bool get_value(literal_t lit) const override;
+  virtual literal_t get_solution(literal_t lit) const override;
 };
 
 } // namespace uasat

@@ -33,42 +33,35 @@ typedef int literal_t;
 
 class Logic {
 public:
-  const literal_t TRUE;
-  const literal_t FALSE;
+  const static literal_t TRUE = 1;
+  const static literal_t UNDEF = 0;
+  const static literal_t FALSE = -1;
 
 public:
-  Logic(literal_t TRUE) : TRUE(TRUE), FALSE(-TRUE) {}
   virtual ~Logic() = default;
 
-  static literal_t logic_not(literal_t a) { return -a; }
+  literal_t logic_not(literal_t a) { return -a; }
 
-  virtual literal_t logic_and(literal_t a, literal_t b) {
-    return -logic_or(-a, -b);
-  }
+  virtual literal_t logic_and(literal_t a, literal_t b) = 0;
 
-  virtual literal_t logic_or(literal_t a, literal_t b) {
-    return -logic_and(-a, -b);
-  }
+  literal_t logic_or(literal_t a, literal_t b) { return -logic_and(-a, -b); }
 
-  virtual literal_t logic_add(literal_t a, literal_t b) {
-    return logic_equ(a, -b);
-  }
+  literal_t logic_leq(literal_t a, literal_t b) { return -logic_and(a, -b); }
 
-  virtual literal_t logic_equ(literal_t a, literal_t b) {
-    return logic_add(a, -b);
-  }
+  virtual literal_t logic_add(literal_t a, literal_t b) = 0;
 
-  literal_t fold_and(const std::vector<literal_t> &as);
-  literal_t fold_or(const std::vector<literal_t> &as);
-  literal_t fold_add(const std::vector<literal_t> &as);
+  literal_t logic_equ(literal_t a, literal_t b) { return logic_add(a, -b); }
+
+  literal_t fold_all(const std::vector<literal_t> &as);
+
+  literal_t fold_any(const std::vector<literal_t> &as);
+
+  literal_t fold_sum(const std::vector<literal_t> &as);
 };
 
 extern const std::shared_ptr<Logic> BOOLEAN;
 
 class Solver : public Logic {
-protected:
-  Solver(literal_t TRUE) : Logic(TRUE) {}
-
 public:
   static std::shared_ptr<Solver> create(const std::string &options = "minisat");
   virtual ~Solver() = default;
@@ -84,7 +77,7 @@ public:
   virtual unsigned long get_clauses() const = 0;
 
   virtual bool solve() = 0;
-  virtual bool get_value(literal_t) const = 0;
+  virtual literal_t get_solution(literal_t) const = 0;
 
   virtual literal_t logic_and(literal_t a, literal_t b) override;
   virtual literal_t logic_add(literal_t a, literal_t b) override;
