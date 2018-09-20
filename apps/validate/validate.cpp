@@ -70,19 +70,18 @@ int validate2(int size) {
   std::shared_ptr<uasat::Solver> solver = uasat::Solver::create();
 
   // create binary relation
-  std::shared_ptr<const uasat::Tensor> relation =
-      uasat::Tensor::variable(solver, {size, size});
+  uasat::Tensor relation = uasat::Tensor::variable(solver, {size, size});
 
-  uasat::literal_t reflexive = relation->permute({size}, {0, 0})->fold_all();
+  uasat::literal_t reflexive = relation.permute({size}, {0, 0}).fold_all();
 
   uasat::literal_t symmetric =
-      relation->logic_leq(relation->permute({size, size}, {1, 0}))->fold_all();
+      relation.logic_leq(relation.permute({size, size}, {1, 0})).fold_all();
 
   uasat::literal_t transitive =
-      relation->permute({size, size, size}, {1, 0})
-          ->logic_and(relation->permute({size, size, size}, {0, 2}))
-          ->fold_any({true, false, false})
-          ->fold_all();
+      relation.permute({size, size, size}, {1, 0})
+          .logic_and(relation.permute({size, size, size}, {0, 2}))
+          .fold_any({true, false, false})
+          .fold_all();
 
   uasat::literal_t equivalence =
       solver->fold_all({reflexive, symmetric, transitive});

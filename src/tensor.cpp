@@ -103,59 +103,49 @@ Tensor::Tensor(const std::shared_ptr<Logic> &logic,
                const std::vector<int> &shape)
     : logic(logic), shape(shape), storage(get_storage_size(shape)) {}
 
-std::shared_ptr<const Tensor>
-Tensor::variable(const std::shared_ptr<Solver> &solver,
-                 const std::vector<int> &shape, bool decision) {
-  std::shared_ptr<Tensor> new_tensor = std::make_shared<Tensor>(solver, shape);
+Tensor Tensor::variable(const std::shared_ptr<Solver> &solver,
+                        const std::vector<int> &shape, bool decision) {
+  Tensor tensor(solver, shape);
+  for (size_t i = 0; i < tensor.storage.size(); i++)
+    tensor.storage[i] = solver->add_variable(decision);
 
-  std::vector<int> &new_storage = new_tensor->storage;
-  for (size_t i = 0; i < new_storage.size(); i++)
-    new_storage[i] = solver->add_variable(decision);
-
-  return new_tensor;
+  return tensor;
 }
 
-std::shared_ptr<const Tensor>
-Tensor::constant(const std::shared_ptr<Logic> &logic,
-                 const std::vector<int> &shape, literal_t literal) {
-  std::shared_ptr<Tensor> new_tensor = std::make_shared<Tensor>(logic, shape);
+Tensor Tensor::constant(const std::shared_ptr<Logic> &logic,
+                        const std::vector<int> &shape, literal_t literal) {
+  Tensor tensor(logic, shape);
+  for (size_t i = 0; i < tensor.storage.size(); i++)
+    tensor.storage[i] = literal;
 
-  std::vector<int> &new_storage = new_tensor->storage;
-  for (size_t i = 0; i < new_storage.size(); i++)
-    new_storage[i] = literal;
-
-  return new_tensor;
+  return tensor;
 }
 
-std::shared_ptr<const Tensor> Tensor::permute(const Tensor *old_tensor,
-                                              const std::vector<int> &new_shape,
-                                              const std::vector<int> &mapping) {
-  const std::vector<int> &old_shape = old_tensor->shape;
-  const std::vector<literal_t> &old_storage = old_tensor->storage;
+Tensor Tensor::permute(const std::vector<int> &new_shape,
+                       const std::vector<int> &mapping) const {
 
-  if (old_shape.size() != mapping.size())
+  if (shape.size() != mapping.size())
     throw std::invalid_argument("invalid coordinate mapping size");
 
-  std::shared_ptr<Tensor> new_tensor =
-      std::make_shared<Tensor>(old_tensor->logic, new_shape);
-  std::vector<literal_t> &new_storage = new_tensor->storage;
+  Tensor new_tensor(logic, new_shape);
+  std::vector<literal_t> &new_storage = new_tensor.storage;
 
   int length = 1;
   std::vector<int> stride(new_shape.size(), 0);
-  for (size_t i = 0; i < old_shape.size(); i++) {
+  for (size_t i = 0; i < shape.size(); i++) {
     if (mapping[i] < 0 || (size_t)mapping[i] > new_shape.size())
       throw std::invalid_argument("invalid coordinate mapping index");
-    if (old_shape[i] != new_shape[mapping[i]])
+    if (shape[i] != new_shape[mapping[i]])
       throw std::invalid_argument("invalid coordinate mapping value");
 
     stride[mapping[i]] += length;
-    length *= old_shape[i];
+    length *= shape[i];
   }
 
   std::vector<int> new_coord(new_shape.size(), 0);
   size_t old_index = 0;
   for (size_t new_index = 0; new_index < new_storage.size(); new_index++) {
-    new_storage[new_index] = old_storage[old_index];
+    new_storage[new_index] = storage[old_index];
     for (size_t i = 0; i < new_coord.size();) {
       old_index += stride[i];
       if (++new_coord[i] < new_shape[i])
@@ -171,13 +161,9 @@ std::shared_ptr<const Tensor> Tensor::permute(const Tensor *old_tensor,
   return new_tensor;
 }
 
-std::shared_ptr<const Tensor> Tensor::logic_not(const Tensor *tensor) {
-  std::shared_ptr<Tensor> new_tensor =
-      std::make_shared<Tensor>(tensor->logic, tensor->shape);
-
-  const std::vector<int> &storage = tensor->storage;
-  std::vector<int> &new_storage = new_tensor->storage;
-  Logic *logic = tensor->logic.get();
+Tensor Tensor::logic_not() const {
+  Tensor new_tensor(logic, shape);
+  std::vector<int> &new_storage = new_tensor.storage;
 
   for (size_t i = 0; i < new_storage.size(); i++)
     new_storage[i] = logic->logic_not(storage[i]);
@@ -185,32 +171,23 @@ std::shared_ptr<const Tensor> Tensor::logic_not(const Tensor *tensor) {
   return new_tensor;
 }
 
-std::shared_ptr<const Tensor>
-Tensor::logic_bin(literal_t (Logic::*op)(literal_t, literal_t),
-                  const Tensor *tensor1, const Tensor *tensor2) {
-  if (tensor1->logic != tensor2->logic)
+Tensor Tensor::logic_bin(literal_t (Logic::*op)(literal_t, literal_t),
+                         const Tensor &tensor2) const {
+  if (logic != tensor2.logic)
     throw std::invalid_argument("non-matching logic");
-  if (tensor1->shape != tensor2->shape)
+  if (shape != tensor2.shape)
     throw std::invalid_argument("non-matching shape");
 
-  std::shared_ptr<Tensor> new_tensor =
-      std::make_shared<Tensor>(tensor1->logic, tensor1->shape);
-
-  const std::vector<int> &storage1 = tensor1->storage;
-  const std::vector<int> &storage2 = tensor2->storage;
-  std::vector<int> &new_storage = new_tensor->storage;
-  Logic *logic = tensor1->logic.get();
-
-  for (size_t i = 0; i < new_storage.size(); i++)
-    new_storage[i] = (logic->*op)(storage1[i], storage2[i]);
+  Tensor new_tensor(logic, shape);
+  for (size_t i = 0; i < new_tensor.storage.size(); i++)
+    new_tensor.storage[i] = (logic.get()->*op)(storage[i], tensor2.storage[i]);
 
   return new_tensor;
 }
 
-std::shared_ptr<const Tensor>
-Tensor::fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &),
-                 const Tensor *tensor, const std::vector<bool> &selection) {
-  if (selection.size() != tensor->shape.size())
+Tensor Tensor::fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &),
+                        const std::vector<bool> &selection) const {
+  if (selection.size() != shape.size())
     throw std::invalid_argument("invalid fold selection");
 
   std::vector<index_t> scan_shape;
@@ -219,20 +196,16 @@ Tensor::fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &),
   index_t length = 1;
   for (std::size_t i = 0; i < selection.size(); i++) {
     if (selection[i])
-      fold_view.add_dimension(tensor->shape[i], length);
+      fold_view.add_dimension(shape[i], length);
     else {
-      scan_view.add_dimension(tensor->shape[i], length);
-      scan_shape.emplace_back(tensor->shape[i]);
+      scan_view.add_dimension(shape[i], length);
+      scan_shape.push_back(shape[i]);
     }
-    length *= tensor->shape[i];
+    length *= shape[i];
   }
 
-  Logic *logic = tensor->logic.get();
-  const std::vector<literal_t> &storage = tensor->storage;
-  std::shared_ptr<Tensor> scan_tensor =
-      std::make_shared<Tensor>(tensor->logic, scan_shape);
-  std::vector<literal_t> &scan_storage = scan_tensor->storage;
-  assert(scan_storage.size() == (std::size_t)scan_view.get_view_size());
+  Tensor scan_tensor(logic, scan_shape);
+  assert(scan_tensor.storage.size() == (std::size_t)scan_view.get_view_size());
   std::vector<literal_t> fold_storage(fold_view.get_view_size());
 
   do {
@@ -241,19 +214,21 @@ Tensor::fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &),
       fold_storage[fold_view.get_view_index()] =
           storage[scan_base_index + fold_view.get_base_index()];
     } while (fold_view.increment());
-    scan_storage[scan_view.get_view_index()] = (logic->*op)(fold_storage);
+    scan_tensor.storage[scan_view.get_view_index()] =
+        (logic.get()->*op)(fold_storage);
   } while (scan_view.increment());
 
   return scan_tensor;
 }
 
 literal_t Tensor::get_scalar() const {
-  assert(shape.size() == 0);
+  if (shape.size() != 0)
+    throw std::invalid_argument("tensor must be scalar");
   return storage[0];
 }
 
-std::ostream &operator<<(std::ostream &out, const Tensor *tensor) {
-  const std::vector<literal_t> &storage = tensor->storage;
+std::ostream &operator<<(std::ostream &out, const Tensor &tensor) {
+  const std::vector<literal_t> &storage = tensor.storage;
 
   out << '[';
   for (std::size_t i = 0; i < storage.size(); i++) {

@@ -28,18 +28,16 @@
 int main() {
   std::shared_ptr<uasat::Solver> solver = uasat::Solver::create();
 
-  std::shared_ptr<const uasat::Tensor> tensor1 =
-      uasat::Tensor::variable(solver, {2, 2, 3});
+  uasat::Tensor tensor1 = uasat::Tensor::variable(solver, {2, 2, 3});
   std::cout << tensor1 << std::endl;
 
-  std::shared_ptr<const uasat::Tensor> tensor2 = tensor1->logic_not();
+  uasat::Tensor tensor2 = tensor1.logic_not();
   std::cout << tensor2 << std::endl;
 
-  std::shared_ptr<const uasat::Tensor> tensor3 =
-      tensor2->permute({3, 2, 2}, {1, 1, 0});
+  uasat::Tensor tensor3 = tensor2.permute({3, 2, 2}, {1, 1, 0});
   std::cout << tensor3 << std::endl;
 
-  std::shared_ptr<const uasat::Tensor> tensor4 = tensor1->logic_add(tensor2);
+  uasat::Tensor tensor4 = tensor1.logic_add(tensor2);
   std::cout << tensor4 << std::endl;
 
   return 0;
