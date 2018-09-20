@@ -162,13 +162,12 @@ Tensor Tensor::permute(const std::vector<int> &new_shape,
 }
 
 Tensor Tensor::logic_not() const {
-  Tensor new_tensor(logic, shape);
-  std::vector<int> &new_storage = new_tensor.storage;
+  Tensor tensor2(logic, shape);
 
-  for (size_t i = 0; i < new_storage.size(); i++)
-    new_storage[i] = logic->logic_not(storage[i]);
+  for (size_t i = 0; i < tensor2.storage.size(); i++)
+    tensor2.storage[i] = logic->logic_not(storage[i]);
 
-  return new_tensor;
+  return tensor2;
 }
 
 Tensor Tensor::logic_bin(literal_t (Logic::*op)(literal_t, literal_t),
@@ -178,11 +177,11 @@ Tensor Tensor::logic_bin(literal_t (Logic::*op)(literal_t, literal_t),
   if (shape != tensor2.shape)
     throw std::invalid_argument("non-matching shape");
 
-  Tensor new_tensor(logic, shape);
-  for (size_t i = 0; i < new_tensor.storage.size(); i++)
-    new_tensor.storage[i] = (logic.get()->*op)(storage[i], tensor2.storage[i]);
+  Tensor tensor3(logic, shape);
+  for (size_t i = 0; i < tensor3.storage.size(); i++)
+    tensor3.storage[i] = (logic.get()->*op)(storage[i], tensor2.storage[i]);
 
-  return new_tensor;
+  return tensor3;
 }
 
 Tensor Tensor::fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &),
@@ -222,14 +221,13 @@ Tensor Tensor::fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &),
 }
 
 literal_t Tensor::get_scalar() const {
-  if (shape.size() != 0)
+  if (shape.size() != 1)
     throw std::invalid_argument("tensor must be scalar");
   return storage[0];
 }
 
 std::ostream &operator<<(std::ostream &out, const Tensor &tensor) {
   const std::vector<literal_t> &storage = tensor.storage;
-
   out << '[';
   for (std::size_t i = 0; i < storage.size(); i++) {
     if (i != 0)
