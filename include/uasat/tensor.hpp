@@ -31,17 +31,27 @@ namespace uasat {
 
 class Tensor {
 public:
-  typedef int index_t;
   const std::shared_ptr<Logic> logic;
+
+  /**
+   * The shape of a tensor is a list of positive integers describing the
+   * dimension of the tensor along the given axes. The rank of the tensor is the
+   * number of axes.
+   */
   const std::vector<int> shape;
 
 protected:
+  /**
+   * The elements of the tensor are stored in an array. Each element is
+   * identified by an index within this array and also by a list of coordinates,
+   * one for each axis.
+   */
   std::vector<literal_t> storage;
 
   Tensor(const std::shared_ptr<Logic> &logic, const std::vector<int> &shape);
 
   /**
-   * Performs the given generic binary logic operation on the two tensors.
+   * Performs the given generic binary logic operation on the given tensors.
    */
   Tensor logic_bin(literal_t (Logic::*op)(literal_t, literal_t),
                    const Tensor &tensor2) const;
@@ -53,11 +63,18 @@ protected:
   Tensor fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &),
                   const std::vector<bool> &selection) const;
 
+  /**
+   * Returns the index of the element identified by the given coordinates.
+   */
+  size_t __very_slow_get_index(const std::vector<int> &coordinates) const;
+
 public:
   /**
    * Returns the literal in this tensor at the given coordinates.
    */
-  literal_t very_slow_get_literal(const std::vector<int> &coords) const;
+  literal_t __very_slow_get_value(const std::vector<int> &coords) const {
+    return storage[__very_slow_get_index(coords)];
+  }
 
   /**
    * Creates a new tensor with the given shape with fresh variables from
@@ -128,7 +145,7 @@ public:
   }
 
   /**
-   * Fold the given tensor along the selected dimensions using the logical and
+   * Fold the given tensor along the selected axes using the logical and
    * operation.
    */
   Tensor fold_all(const std::vector<bool> &selection) const {
@@ -138,7 +155,7 @@ public:
   literal_t fold_all() const { return logic->fold_all(storage); }
 
   /**
-   * Fold the given tensor along the selected dimensions using the logical or
+   * Fold the given tensor along the selected axes using the logical or
    * operation.
    */
   Tensor fold_any(const std::vector<bool> &selection) const {
@@ -148,7 +165,7 @@ public:
   literal_t fold_any() const { return logic->fold_any(storage); }
 
   /**
-   * Returns the scalar value of a zero dimensional tensor.
+   * Returns the scalar value of a zero rank tensor.
    */
   literal_t get_scalar() const;
 

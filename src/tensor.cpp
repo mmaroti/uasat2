@@ -28,73 +28,64 @@
 
 namespace uasat {
 
-class IndexView {
-private:
-  typedef int index_t;
-
-  index_t base_index = 0;
-  index_t view_index = 0;
-  index_t view_size = 1;
+class View {
+public:
+  size_t offset = 0;
+  size_t index = 0;
+  size_t size = 1;
 
   struct dimension_t {
-    dimension_t(index_t size, index_t stride, index_t index)
-        : size(size), stride(stride), index(index) {}
-    index_t size;
-    index_t stride;
-    index_t index;
+    dimension_t(size_t size, size_t stride)
+        : index(0), size(size), stride(stride) {}
+    size_t index;
+    size_t size;
+    size_t stride;
   };
 
   std::vector<dimension_t> dimensions;
 
-public:
-  void add_dimension(index_t size, index_t stride) {
-    assert(size > 0);
+  void add(int dim_size, size_t stride) {
+    assert(dim_size > 0);
     if (!dimensions.empty() &&
         dimensions.back().size * dimensions.back().stride == stride) {
-      dimensions.back().size *= size;
-    } else {
-      dimensions.emplace_back(size, stride, 0);
-    }
-    assert(view_size <= std::numeric_limits<index_t>::max() / size);
-    view_size *= size;
+      dimensions.back().size *= dim_size;
+    } else
+      dimensions.emplace_back(dim_size, stride);
+
+    assert(size <= std::numeric_limits<size_t>::max() / dim_size);
+    size *= dim_size;
   }
 
   void reset() {
-    base_index = 0;
-    view_index = 0;
+    offset = 0;
+    index = 0;
     for (dimension_t &dim : dimensions)
       dim.index = 0;
   }
 
-  bool increment() {
-    view_index += 1;
+  bool next() {
+    index += 1;
     for (dimension_t &dim : dimensions) {
-      base_index += dim.stride;
+      offset += dim.stride;
       if (++dim.index < dim.size)
         return true;
       dim.index = 0;
-      base_index -= dim.stride * dim.size;
+      offset -= dim.stride * dim.size;
     }
-    assert(base_index == 0);
-    assert(view_index == view_size);
-    view_index = 0;
+    assert(offset == 0 && index == size);
+    index = 0;
     return false;
   }
-
-  index_t get_base_index() const { return base_index; }
-  index_t get_view_index() const { return view_index; }
-  index_t get_view_size() const { return view_size; }
 };
 
-std::size_t get_storage_size(const std::vector<Tensor::index_t> &shape) {
-  assert(sizeof(Tensor::index_t) <= sizeof(std::size_t));
-  Tensor::index_t size = 1;
-  for (Tensor::index_t dim : shape) {
-    if (dim <= 0)
-      throw std::invalid_argument("dimensions must be positive");
-    if (size > std::numeric_limits<Tensor::index_t>::max() / dim)
+size_t get_storage_size(const std::vector<int> &shape) {
+  int size = 1;
+  for (int dimension : shape) {
+    if (dimension <= 0)
+      throw std::invalid_argument("dimension must be positive");
+    if (size > std::numeric_limits<int>::max() / dimension)
       throw std::invalid_argument("tensor size is too big");
-    size *= dim;
+    size *= dimension;
   }
   return size;
 }
@@ -103,21 +94,23 @@ Tensor::Tensor(const std::shared_ptr<Logic> &logic,
                const std::vector<int> &shape)
     : logic(logic), shape(shape), storage(get_storage_size(shape)) {}
 
-literal_t Tensor::very_slow_get_literal(const std::vector<int> &coords) const {
-  if (coords.size() != shape.size())
-    throw std::invalid_argument("invalid dimension");
+size_t
+Tensor::__very_slow_get_index(const std::vector<int> &coordinates) const {
+  if (coordinates.size() != shape.size())
+    throw std::invalid_argument("invalid number of coordinates");
 
-  int index = 0;
-  int length = 1;
-  for (std::size_t i = 0; i < coords.size(); i++) {
-    if (coords[i] < 0 || coords[i] >= shape[i])
-      throw std::invalid_argument("invalid coordinate");
+  size_t index = 0;
+  size_t size = 1;
+  for (size_t axis = 0; axis < coordinates.size(); axis++) {
+    if (coordinates[axis] < 0 || coordinates[axis] >= shape[axis])
+      throw std::invalid_argument("invalid coordinate value");
 
-    index += coords[i] * length;
-    length *= shape[i];
+    index += coordinates[axis] * size;
+    size *= shape[axis];
   }
 
-  assert(0 <= index && (std::size_t)index < storage.size());
+  assert(size == storage.size());
+  assert(index < storage.size());
   return storage[index];
 }
 
@@ -125,8 +118,8 @@ Tensor Tensor::variable(const std::shared_ptr<Solver> &solver,
                         const std::vector<int> &shape, bool decision,
                         bool polarity) {
   Tensor tensor(solver, shape);
-  for (size_t i = 0; i < tensor.storage.size(); i++)
-    tensor.storage[i] = solver->add_variable(decision, polarity);
+  for (literal_t &value : tensor.storage)
+    value = solver->add_variable(decision, polarity);
 
   return tensor;
 }
@@ -134,57 +127,48 @@ Tensor Tensor::variable(const std::shared_ptr<Solver> &solver,
 Tensor Tensor::constant(const std::shared_ptr<Logic> &logic,
                         const std::vector<int> &shape, literal_t literal) {
   Tensor tensor(logic, shape);
-  for (size_t i = 0; i < tensor.storage.size(); i++)
-    tensor.storage[i] = literal;
+  for (literal_t &value : tensor.storage)
+    value = literal;
 
   return tensor;
 }
 
-Tensor Tensor::polymer(const std::vector<int> &new_shape,
+Tensor Tensor::polymer(const std::vector<int> &shape2,
                        const std::vector<int> &mapping) const {
 
   if (shape.size() != mapping.size())
     throw std::invalid_argument("invalid coordinate mapping size");
 
-  Tensor new_tensor(logic, new_shape);
-  std::vector<literal_t> &new_storage = new_tensor.storage;
+  Tensor tensor2(logic, shape2);
 
-  int length = 1;
-  std::vector<int> stride(new_shape.size(), 0);
-  for (size_t i = 0; i < shape.size(); i++) {
-    if (mapping[i] < 0 || (size_t)mapping[i] > new_shape.size())
+  size_t size = 1;
+  std::vector<size_t> stride2(shape2.size(), 0);
+  for (size_t axis = 0; axis < shape.size(); axis++) {
+    if (mapping[axis] < 0 || (size_t)mapping[axis] >= shape2.size())
       throw std::invalid_argument("invalid coordinate mapping index");
-    if (shape[i] != new_shape[mapping[i]])
+    if (shape[axis] != shape2[mapping[axis]])
       throw std::invalid_argument("invalid coordinate mapping value");
 
-    stride[mapping[i]] += length;
-    length *= shape[i];
+    stride2[mapping[axis]] += size;
+    size *= shape[axis];
   }
 
-  std::vector<int> new_coord(new_shape.size(), 0);
-  size_t old_index = 0;
-  for (size_t new_index = 0; new_index < new_storage.size(); new_index++) {
-    new_storage[new_index] = storage[old_index];
-    for (size_t i = 0; i < new_coord.size();) {
-      old_index += stride[i];
-      if (++new_coord[i] < new_shape[i])
-        break;
-      old_index -= stride[i] * new_shape[i];
-      new_coord[i++] = 0;
-    }
-  }
+  View view;
+  for (size_t axis = 0; axis < shape2.size(); axis++)
+    view.add(shape2[axis], stride2[axis]);
 
-  for (size_t i = 0; i < new_coord.size(); i++)
-    assert(new_coord[i] == 0);
+  do {
+    tensor2.storage[view.index] = storage[view.offset];
+  } while (view.next());
 
-  return new_tensor;
+  return tensor2;
 }
 
 Tensor Tensor::logic_not() const {
   Tensor tensor2(logic, shape);
 
-  for (size_t i = 0; i < tensor2.storage.size(); i++)
-    tensor2.storage[i] = logic->logic_not(storage[i]);
+  for (size_t index = 0; index < tensor2.storage.size(); index++)
+    tensor2.storage[index] = logic->logic_not(storage[index]);
 
   return tensor2;
 }
@@ -197,8 +181,9 @@ Tensor Tensor::logic_bin(literal_t (Logic::*op)(literal_t, literal_t),
     throw std::invalid_argument("non-matching shape");
 
   Tensor tensor3(logic, shape);
-  for (size_t i = 0; i < tensor3.storage.size(); i++)
-    tensor3.storage[i] = (logic.get()->*op)(storage[i], tensor2.storage[i]);
+  for (size_t index = 0; index < tensor3.storage.size(); index++)
+    tensor3.storage[index] =
+        (logic.get()->*op)(storage[index], tensor2.storage[index]);
 
   return tensor3;
 }
@@ -208,39 +193,37 @@ Tensor Tensor::fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &),
   if (selection.size() != shape.size())
     throw std::invalid_argument("invalid fold selection");
 
-  std::vector<index_t> scan_shape;
-  IndexView fold_view;
-  IndexView scan_view;
-  index_t length = 1;
-  for (std::size_t i = 0; i < selection.size(); i++) {
+  std::vector<int> shape2;
+  View fold;
+  View scan;
+  size_t length = 1;
+
+  for (size_t i = 0; i < selection.size(); i++) {
     if (selection[i])
-      fold_view.add_dimension(shape[i], length);
+      fold.add(shape[i], length);
     else {
-      scan_view.add_dimension(shape[i], length);
-      scan_shape.push_back(shape[i]);
+      scan.add(shape[i], length);
+      shape2.push_back(shape[i]);
     }
     length *= shape[i];
   }
 
-  Tensor scan_tensor(logic, scan_shape);
-  assert(scan_tensor.storage.size() == (std::size_t)scan_view.get_view_size());
-  std::vector<literal_t> fold_storage(fold_view.get_view_size());
+  Tensor tensor2(logic, shape2);
+  assert(tensor2.storage.size() == scan.size);
+  std::vector<literal_t> literals(fold.size);
 
   do {
-    index_t scan_base_index = scan_view.get_base_index();
     do {
-      fold_storage[fold_view.get_view_index()] =
-          storage[scan_base_index + fold_view.get_base_index()];
-    } while (fold_view.increment());
-    scan_tensor.storage[scan_view.get_view_index()] =
-        (logic.get()->*op)(fold_storage);
-  } while (scan_view.increment());
+      literals[fold.index] = storage[scan.offset + fold.offset];
+    } while (fold.next());
+    tensor2.storage[scan.index] = (logic.get()->*op)(literals);
+  } while (scan.next());
 
-  return scan_tensor;
+  return tensor2;
 }
 
 literal_t Tensor::get_scalar() const {
-  if (shape.size() != 1)
+  if (storage.size() != 1)
     throw std::invalid_argument("tensor must be scalar");
   return storage[0];
 }
@@ -250,24 +233,23 @@ Tensor Tensor::get_solution(const std::shared_ptr<Solver> &solver) const {
     throw std::invalid_argument("non-matching solver");
 
   Tensor tensor(BOOLEAN, shape);
-  for (size_t i = 0; i < tensor.storage.size(); i++)
-    tensor.storage[i] = solver->get_solution(storage[i]);
+  for (size_t index = 0; index < tensor.storage.size(); index++)
+    tensor.storage[index] = solver->get_solution(storage[index]);
 
   return tensor;
 }
 
 void Tensor::extend_clause(std::vector<literal_t> &clause) const {
-  for (size_t i = 0; i < storage.size(); i++)
-    clause.push_back(storage[i]);
+  for (size_t index = 0; index < storage.size(); index++)
+    clause.push_back(storage[index]);
 }
 
 std::ostream &operator<<(std::ostream &out, const Tensor &tensor) {
-  const std::vector<literal_t> &storage = tensor.storage;
   out << '[';
-  for (std::size_t i = 0; i < storage.size(); i++) {
-    if (i != 0)
+  for (size_t index = 0; index < tensor.storage.size(); index++) {
+    if (index != 0)
       out << ',';
-    out << storage[i];
+    out << tensor.storage[index];
   }
   out << ']';
   return out;
