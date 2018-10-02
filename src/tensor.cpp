@@ -121,7 +121,7 @@ Tensor Tensor::constant(const std::shared_ptr<Logic> &logic,
   return tensor;
 }
 
-Tensor Tensor::permute(const std::vector<int> &new_shape,
+Tensor Tensor::polymer(const std::vector<int> &new_shape,
                        const std::vector<int> &mapping) const {
 
   if (shape.size() != mapping.size())
@@ -172,7 +172,7 @@ Tensor Tensor::logic_not() const {
 
 Tensor Tensor::logic_bin(literal_t (Logic::*op)(literal_t, literal_t),
                          const Tensor &tensor2) const {
-  if (logic != tensor2.logic)
+  if (logic != tensor2.logic && logic != BOOLEAN && tensor2.logic != BOOLEAN)
     throw std::invalid_argument("non-matching logic");
   if (shape != tensor2.shape)
     throw std::invalid_argument("non-matching shape");
@@ -224,6 +224,22 @@ literal_t Tensor::get_scalar() const {
   if (shape.size() != 1)
     throw std::invalid_argument("tensor must be scalar");
   return storage[0];
+}
+
+Tensor Tensor::get_solution(const std::shared_ptr<Solver> &solver) const {
+  if (solver.get() != logic.get())
+    throw std::invalid_argument("non-matching solver");
+
+  Tensor tensor(BOOLEAN, shape);
+  for (size_t i = 0; i < tensor.storage.size(); i++)
+    tensor.storage[i] = solver->get_solution(storage[i]);
+
+  return tensor;
+}
+
+void Tensor::extend_clause(std::vector<literal_t> &clause) const {
+  for (size_t i = 0; i < storage.size(); i++)
+    clause.push_back(storage[i]);
 }
 
 std::ostream &operator<<(std::ostream &out, const Tensor &tensor) {

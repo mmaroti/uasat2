@@ -73,7 +73,7 @@ public:
    * of length of the old tensor shape with entries identifing the coordinate
    * in the new tensor.
    */
-  Tensor permute(const std::vector<int> &shape,
+  Tensor polymer(const std::vector<int> &shape,
                  const std::vector<int> &mapping) const;
 
   /**
@@ -145,6 +145,17 @@ public:
    * Returns the scalar value of a zero dimensional tensor.
    */
   literal_t get_scalar() const;
+
+  /**
+   * Returns the boolean tensor that contains the values of this
+   * tensor in the current solution.
+   */
+  Tensor get_solution(const std::shared_ptr<Solver> &solver) const;
+
+  /**
+   * Adds the literals of this tensor to the clause.
+   */
+  void extend_clause(std::vector<literal_t> &clause) const;
 
   /**
    * Prints out the tensor content without shape information.

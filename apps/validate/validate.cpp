@@ -72,27 +72,29 @@ int validate2(int size) {
   // create binary relation
   uasat::Tensor relation = uasat::Tensor::variable(solver, {size, size});
 
-  uasat::literal_t reflexive = relation.permute({size}, {0, 0}).fold_all();
+  uasat::literal_t reflexive = relation.polymer({size}, {0, 0}).fold_all();
 
   uasat::literal_t symmetric =
-      relation.logic_leq(relation.permute({size, size}, {1, 0})).fold_all();
+      relation.logic_leq(relation.polymer({size, size}, {1, 0})).fold_all();
 
   uasat::literal_t transitive =
-      relation.permute({size, size, size}, {1, 0})
-          .logic_and(relation.permute({size, size, size}, {0, 2}))
-          .fold_any({true, false, false})
+      relation.polymer({size, size, size}, {0, 1})
+          .logic_and(relation.polymer({size, size, size}, {1, 2}))
+          .fold_any({false, true, false})
+          .logic_leq(relation)
           .fold_all();
 
-  uasat::literal_t equivalence =
-      solver->fold_all({reflexive, symmetric, transitive});
+  solver->add_clause(reflexive);
+  solver->add_clause(symmetric);
+  solver->add_clause(transitive);
 
   int count = 0;
-  /*
-    while (solver->solve()) {
-      count += 1;
-      relation->get_solution();
-    }
-  */
+  while (solver->solve()) {
+    std::vector<uasat::literal_t> clause;
+    relation.logic_add(relation.get_solution(solver)).extend_clause(clause);
+    solver->add_clause(clause);
+    count += 1;
+  }
 
   return count;
 }
@@ -101,7 +103,7 @@ int main() {
   std::cout << "Calculating the 8th Bell number (4140 solutions): ";
 
   auto start = std::chrono::steady_clock::now();
-  int result = validate1(8);
+  int result = validate2(8);
   int msecs = std::chrono::duration_cast<std::chrono::milliseconds>(
                   std::chrono::steady_clock::now() - start)
                   .count();

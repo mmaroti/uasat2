@@ -34,7 +34,7 @@ int main() {
   uasat::Tensor tensor2 = tensor1.logic_not();
   std::cout << tensor2 << std::endl;
 
-  uasat::Tensor tensor3 = tensor2.permute({3, 2, 2}, {1, 1, 0});
+  uasat::Tensor tensor3 = tensor2.polymer({3, 2, 2}, {1, 1, 0});
   std::cout << tensor3 << std::endl;
 
   uasat::Tensor tensor4 = tensor1.logic_add(tensor2);

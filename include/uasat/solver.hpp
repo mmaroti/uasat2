@@ -61,6 +61,8 @@ public:
 
 extern const std::shared_ptr<Logic> BOOLEAN;
 
+class Tensor;
+
 class Solver : public Logic {
 public:
   static std::shared_ptr<Solver> create(const std::string &options = "minisat");
@@ -79,8 +81,8 @@ public:
   virtual bool solve() = 0;
   virtual literal_t get_solution(literal_t) const = 0;
 
-  virtual literal_t logic_and(literal_t a, literal_t b) override;
-  virtual literal_t logic_add(literal_t a, literal_t b) override;
+  literal_t logic_and(literal_t a, literal_t b) override;
+  literal_t logic_add(literal_t a, literal_t b) override;
 };
 
 } // namespace uasat
