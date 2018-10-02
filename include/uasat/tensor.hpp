@@ -178,7 +178,7 @@ public:
   /**
    * Adds the literals of this tensor to the clause.
    */
-  void extend_clause(std::vector<literal_t> &clause) const;
+  void collect(std::vector<literal_t> &clause) const;
 
   /**
    * Prints out the tensor content without shape information.

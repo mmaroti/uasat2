@@ -40,23 +40,25 @@ public:
 public:
   virtual ~Logic() = default;
 
-  literal_t logic_not(literal_t a) { return -a; }
+  literal_t logic_not(literal_t lit) { return -lit; }
+  virtual literal_t logic_and(literal_t lit1, literal_t lit2) = 0;
+  virtual literal_t logic_add(literal_t lit1, literal_t lit2) = 0;
 
-  virtual literal_t logic_and(literal_t a, literal_t b) = 0;
+  literal_t logic_or(literal_t lit1, literal_t lit2) {
+    return -logic_and(-lit1, -lit2);
+  }
 
-  literal_t logic_or(literal_t a, literal_t b) { return -logic_and(-a, -b); }
+  literal_t logic_leq(literal_t lit1, literal_t lit2) {
+    return -logic_and(lit1, -lit2);
+  }
 
-  literal_t logic_leq(literal_t a, literal_t b) { return -logic_and(a, -b); }
+  literal_t logic_equ(literal_t lit1, literal_t lit2) {
+    return logic_add(lit1, -lit2);
+  }
 
-  virtual literal_t logic_add(literal_t a, literal_t b) = 0;
-
-  literal_t logic_equ(literal_t a, literal_t b) { return logic_add(a, -b); }
-
-  literal_t fold_all(const std::vector<literal_t> &as);
-
-  literal_t fold_any(const std::vector<literal_t> &as);
-
-  literal_t fold_sum(const std::vector<literal_t> &as);
+  literal_t fold_all(const std::vector<literal_t> &literals);
+  literal_t fold_any(const std::vector<literal_t> &literals);
+  literal_t fold_sum(const std::vector<literal_t> &literals);
 };
 
 extern const std::shared_ptr<Logic> BOOLEAN;
@@ -80,10 +82,10 @@ public:
   virtual unsigned long get_clauses() const = 0;
 
   virtual bool solve() = 0;
-  virtual literal_t get_solution(literal_t) const = 0;
+  virtual literal_t get_solution(literal_t lit) const = 0;
 
-  literal_t logic_and(literal_t a, literal_t b) override;
-  literal_t logic_add(literal_t a, literal_t b) override;
+  literal_t logic_and(literal_t lit1, literal_t lit2) override;
+  literal_t logic_add(literal_t lit1, literal_t lit2) override;
 };
 
 } // namespace uasat

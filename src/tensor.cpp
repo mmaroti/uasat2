@@ -239,7 +239,7 @@ Tensor Tensor::get_solution(const std::shared_ptr<Solver> &solver) const {
   return tensor;
 }
 
-void Tensor::extend_clause(std::vector<literal_t> &clause) const {
+void Tensor::collect(std::vector<literal_t> &clause) const {
   for (size_t index = 0; index < storage.size(); index++)
     clause.push_back(storage[index]);
 }

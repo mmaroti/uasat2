@@ -25,39 +25,39 @@
 
 namespace uasat {
 
-literal_t Logic::fold_all(const std::vector<literal_t> &as) {
-  literal_t b = TRUE;
-  for (literal_t a : as)
-    b = logic_and(b, a);
-  return b;
+literal_t Logic::fold_all(const std::vector<literal_t> &literals) {
+  literal_t res = TRUE;
+  for (literal_t lit : literals)
+    res = logic_and(res, lit);
+  return res;
 }
 
-literal_t Logic::fold_any(const std::vector<literal_t> &as) {
-  literal_t b = FALSE;
-  for (literal_t a : as)
-    b = logic_or(b, a);
-  return b;
+literal_t Logic::fold_any(const std::vector<literal_t> &literals) {
+  literal_t res = FALSE;
+  for (literal_t lit : literals)
+    res = logic_or(res, lit);
+  return res;
 }
 
-literal_t Logic::fold_sum(const std::vector<literal_t> &as) {
-  literal_t b = TRUE;
-  for (literal_t a : as)
-    b = logic_add(b, a);
-  return b;
+literal_t Logic::fold_sum(const std::vector<literal_t> &literals) {
+  literal_t res = TRUE;
+  for (literal_t lit : literals)
+    res = logic_add(res, lit);
+  return res;
 }
 
 class Boolean : public Logic {
 public:
-  virtual literal_t logic_and(literal_t a, literal_t b) override {
-    return a <= b ? a : b;
+  virtual literal_t logic_and(literal_t lit1, literal_t lit2) override {
+    return lit1 <= lit2 ? lit1 : lit2;
   }
 
-  virtual literal_t logic_add(literal_t a, literal_t b) override {
-    literal_t s = a ^ b;          // sign(a*b)
-    a = a < 0 ? -a : a;           // abs(a)
-    b = b < 0 ? -b : b;           // abs(b)
-    literal_t c = a <= b ? a : b; // min(a,b)
-    return s < 0 ? -c : c;
+  virtual literal_t logic_add(literal_t lit1, literal_t lit2) override {
+    literal_t s = lit1 ^ lit2;                   // sign(lit1*b)
+    lit1 = lit1 < 0 ? -lit1 : lit1;              // abs(lit1)
+    lit2 = lit2 < 0 ? -lit2 : lit2;              // abs(lit2)
+    literal_t lit3 = lit1 <= lit2 ? lit1 : lit2; // min(lit1,lit2)
+    return s < 0 ? -lit3 : lit3;
   }
 };
 
@@ -72,45 +72,45 @@ std::shared_ptr<Solver> Solver::create(const std::string &options) {
   throw std::invalid_argument("invalid solver");
 }
 
-literal_t Solver::logic_and(literal_t a, literal_t b) {
-  if (a == FALSE || b == FALSE)
+literal_t Solver::logic_and(literal_t lit1, literal_t lit2) {
+  if (lit1 == FALSE || lit2 == FALSE)
     return FALSE;
-  else if (a == TRUE)
-    return b;
-  else if (b == TRUE)
-    return a;
-  else if (a == b)
-    return a;
-  else if (a == logic_not(b))
+  else if (lit1 == TRUE)
+    return lit2;
+  else if (lit2 == TRUE)
+    return lit1;
+  else if (lit1 == lit2)
+    return lit1;
+  else if (lit1 == logic_not(lit2))
     return FALSE;
 
-  literal_t c = add_variable(false, false);
-  add_clause(a, logic_not(c));
-  add_clause(b, logic_not(c));
-  add_clause(logic_not(a), logic_not(b), c);
-  return c;
+  literal_t lit3 = add_variable(false, false);
+  add_clause(lit1, logic_not(lit3));
+  add_clause(lit2, logic_not(lit3));
+  add_clause(logic_not(lit1), logic_not(lit2), lit3);
+  return lit3;
 }
 
-literal_t Solver::logic_add(literal_t a, literal_t b) {
-  if (a == FALSE)
-    return b;
-  else if (b == FALSE)
-    return a;
-  else if (a == TRUE)
-    return logic_not(b);
-  else if (b == TRUE)
-    return logic_not(a);
-  else if (a == b)
+literal_t Solver::logic_add(literal_t lit1, literal_t lit2) {
+  if (lit1 == FALSE)
+    return lit2;
+  else if (lit2 == FALSE)
+    return lit1;
+  else if (lit1 == TRUE)
+    return logic_not(lit2);
+  else if (lit2 == TRUE)
+    return logic_not(lit1);
+  else if (lit1 == lit2)
     return FALSE;
-  else if (a == logic_not(b))
+  else if (lit1 == logic_not(lit2))
     return TRUE;
 
-  literal_t c = add_variable(false, false);
-  add_clause(a, b, logic_not(c));
-  add_clause(logic_not(a), b, c);
-  add_clause(a, logic_not(b), c);
-  add_clause(logic_not(a), logic_not(b), logic_not(c));
-  return c;
+  literal_t lit3 = add_variable(false, false);
+  add_clause(lit1, lit2, logic_not(lit3));
+  add_clause(logic_not(lit1), lit2, lit3);
+  add_clause(lit1, logic_not(lit2), lit3);
+  add_clause(logic_not(lit1), logic_not(lit2), logic_not(lit3));
+  return lit3;
 }
 
 } // namespace uasat
