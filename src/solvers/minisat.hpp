@@ -30,7 +30,8 @@
 
 namespace Minisat {
 class Solver;
-}
+class SimpSolver;
+} // namespace Minisat
 
 namespace uasat {
 
@@ -41,21 +42,44 @@ protected:
 
 public:
   MiniSat();
-  virtual ~MiniSat();
-  virtual void clear() override;
+  ~MiniSat() override;
+  void clear() override;
 
-  virtual literal_t add_variable(bool decision = false) override;
-  virtual void add_clause(const std::vector<literal_t> &clause) override;
-  virtual void add_clause(literal_t lit1) override;
-  virtual void add_clause(literal_t lit1, literal_t lit2) override;
-  virtual void add_clause(literal_t lit1, literal_t lit2,
-                          literal_t lit3) override;
+  literal_t add_variable(bool decision, bool polarity) override;
+  void add_clause(const std::vector<literal_t> &clause) override;
+  void add_clause(literal_t lit1) override;
+  void add_clause(literal_t lit1, literal_t lit2) override;
+  void add_clause(literal_t lit1, literal_t lit2, literal_t lit3) override;
 
-  virtual unsigned long get_variables() const override;
-  virtual unsigned long get_clauses() const override;
+  unsigned long get_variables() const override;
+  unsigned long get_clauses() const override;
 
-  virtual bool solve() override;
-  virtual literal_t get_solution(literal_t lit) const override;
+  bool solve() override;
+  literal_t get_solution(literal_t lit) const override;
+};
+
+class MiniSatSimp : public Solver {
+protected:
+  std::unique_ptr<Minisat::SimpSolver> solver;
+  bool solvable;
+  bool simplified;
+
+public:
+  MiniSatSimp();
+  ~MiniSatSimp() override;
+  void clear() override;
+
+  literal_t add_variable(bool decision, bool polarity) override;
+  void add_clause(const std::vector<literal_t> &clause) override;
+  void add_clause(literal_t lit1) override;
+  void add_clause(literal_t lit1, literal_t lit2) override;
+  void add_clause(literal_t lit1, literal_t lit2, literal_t lit3) override;
+
+  unsigned long get_variables() const override;
+  unsigned long get_clauses() const override;
+
+  bool solve() override;
+  literal_t get_solution(literal_t lit) const override;
 };
 
 } // namespace uasat

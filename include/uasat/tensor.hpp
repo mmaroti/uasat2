@@ -55,11 +55,17 @@ protected:
 
 public:
   /**
+   * Returns the literal in this tensor at the given coordinates.
+   */
+  literal_t very_slow_get_literal(const std::vector<int> &coords) const;
+
+  /**
    * Creates a new tensor with the given shape with fresh variables from
    * the selected solver.
    */
   static Tensor variable(const std::shared_ptr<Solver> &solver,
-                         const std::vector<int> &shape, bool decision = true);
+                         const std::vector<int> &shape, bool decision = true,
+                         bool polarity = false);
 
   /**
    * Creates a new tensor with the given shape filled with the same literal.

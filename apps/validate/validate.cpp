@@ -27,7 +27,7 @@
 #include "uasat/tensor.hpp"
 
 int validate1(int size) {
-  std::shared_ptr<uasat::Solver> solver = uasat::Solver::create();
+  std::shared_ptr<uasat::Solver> solver = uasat::Solver::create("minisat");
 
   // create binary relation
   std::vector<uasat::literal_t> table(size * size);
@@ -67,9 +67,8 @@ int validate1(int size) {
 }
 
 int validate2(int size) {
-  std::shared_ptr<uasat::Solver> solver = uasat::Solver::create();
+  std::shared_ptr<uasat::Solver> solver = uasat::Solver::create("minisatsimp");
 
-  // create binary relation
   uasat::Tensor relation = uasat::Tensor::variable(solver, {size, size});
 
   uasat::literal_t reflexive = relation.polymer({size}, {0, 0}).fold_all();
@@ -77,16 +76,23 @@ int validate2(int size) {
   uasat::literal_t symmetric =
       relation.logic_leq(relation.polymer({size, size}, {1, 0})).fold_all();
 
-  uasat::literal_t transitive =
-      relation.polymer({size, size, size}, {0, 1})
-          .logic_and(relation.polymer({size, size, size}, {1, 2}))
-          .fold_any({false, true, false})
-          .logic_leq(relation)
-          .fold_all();
+  uasat::literal_t transitive;
+  if (true) {
+    transitive = relation.polymer({size, size, size}, {0, 1})
+                     .logic_and(relation.polymer({size, size, size}, {1, 2}))
+                     .fold_any({false, true, false})
+                     .logic_leq(relation)
+                     .fold_all();
+  } else {
+    transitive = relation.polymer({size, size, size}, {0, 1})
+                     .logic_and(relation.polymer({size, size, size}, {1, 2}))
+                     .logic_leq(relation.polymer({size, size, size}, {0, 2}))
+                     .fold_all();
+  }
 
-  solver->add_clause(reflexive);
-  solver->add_clause(symmetric);
-  solver->add_clause(transitive);
+  uasat::literal_t equivalence =
+      solver->fold_all({reflexive, symmetric, transitive});
+  solver->add_clause(equivalence);
 
   int count = 0;
   while (solver->solve()) {

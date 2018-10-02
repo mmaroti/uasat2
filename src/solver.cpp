@@ -66,6 +66,8 @@ const std::shared_ptr<Logic> BOOLEAN = std::make_shared<Boolean>();
 std::shared_ptr<Solver> Solver::create(const std::string &options) {
   if (options == "minisat")
     return std::make_shared<MiniSat>();
+  else if (options == "minisatsimp")
+    return std::make_shared<MiniSatSimp>();
 
   throw std::invalid_argument("invalid solver");
 }
@@ -82,7 +84,7 @@ literal_t Solver::logic_and(literal_t a, literal_t b) {
   else if (a == logic_not(b))
     return FALSE;
 
-  literal_t c = add_variable(false);
+  literal_t c = add_variable(false, false);
   add_clause(a, logic_not(c));
   add_clause(b, logic_not(c));
   add_clause(logic_not(a), logic_not(b), c);
@@ -103,7 +105,7 @@ literal_t Solver::logic_add(literal_t a, literal_t b) {
   else if (a == logic_not(b))
     return TRUE;
 
-  literal_t c = add_variable(false);
+  literal_t c = add_variable(false, false);
   add_clause(a, b, logic_not(c));
   add_clause(logic_not(a), b, c);
   add_clause(a, logic_not(b), c);

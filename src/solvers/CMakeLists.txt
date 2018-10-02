@@ -1,6 +1,7 @@
 add_library(uasat-minisat STATIC
     minisat.cpp
     minisat/minisat/core/Solver.cc
+    minisat/minisat/simp/SimpSolver.cc
     minisat/minisat/utils/Options.cc)
 set_property(TARGET uasat-minisat PROPERTY POSITION_INDEPENDENT_CODE ON)
 

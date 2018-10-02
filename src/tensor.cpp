@@ -103,11 +103,30 @@ Tensor::Tensor(const std::shared_ptr<Logic> &logic,
                const std::vector<int> &shape)
     : logic(logic), shape(shape), storage(get_storage_size(shape)) {}
 
+literal_t Tensor::very_slow_get_literal(const std::vector<int> &coords) const {
+  if (coords.size() != shape.size())
+    throw std::invalid_argument("invalid dimension");
+
+  int index = 0;
+  int length = 1;
+  for (std::size_t i = 0; i < coords.size(); i++) {
+    if (coords[i] < 0 || coords[i] >= shape[i])
+      throw std::invalid_argument("invalid coordinate");
+
+    index += coords[i] * length;
+    length *= shape[i];
+  }
+
+  assert(0 <= index && (std::size_t)index < storage.size());
+  return storage[index];
+}
+
 Tensor Tensor::variable(const std::shared_ptr<Solver> &solver,
-                        const std::vector<int> &shape, bool decision) {
+                        const std::vector<int> &shape, bool decision,
+                        bool polarity) {
   Tensor tensor(solver, shape);
   for (size_t i = 0; i < tensor.storage.size(); i++)
-    tensor.storage[i] = solver->add_variable(decision);
+    tensor.storage[i] = solver->add_variable(decision, polarity);
 
   return tensor;
 }

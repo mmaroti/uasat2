@@ -69,7 +69,8 @@ public:
   virtual ~Solver() = default;
   virtual void clear() = 0;
 
-  virtual literal_t add_variable(bool decision = true) = 0;
+  virtual literal_t add_variable(bool decision = true,
+                                 bool polarity = false) = 0;
   virtual void add_clause(const std::vector<literal_t> &clause) = 0;
   virtual void add_clause(literal_t lit1) = 0;
   virtual void add_clause(literal_t lit1, literal_t lit2) = 0;
