@@ -33,9 +33,9 @@ typedef int literal_t;
 
 class Logic {
 public:
-  const static literal_t TRUE = 1;
-  const static literal_t UNDEF = 0;
-  const static literal_t FALSE = -1;
+  static const literal_t TRUE = 1;
+  static const literal_t UNDEF = 0;
+  static const literal_t FALSE = -1;
 
 public:
   virtual ~Logic() = default;
@@ -56,9 +56,9 @@ public:
     return logic_add(lit1, -lit2);
   }
 
-  literal_t fold_all(const std::vector<literal_t> &literals);
-  literal_t fold_any(const std::vector<literal_t> &literals);
-  literal_t fold_sum(const std::vector<literal_t> &literals);
+  virtual literal_t fold_all(const std::vector<literal_t> &literals);
+  virtual literal_t fold_any(const std::vector<literal_t> &literals);
+  virtual literal_t fold_sum(const std::vector<literal_t> &literals);
 };
 
 extern const std::shared_ptr<Logic> BOOLEAN;
@@ -86,6 +86,9 @@ public:
 
   literal_t logic_and(literal_t lit1, literal_t lit2) override;
   literal_t logic_add(literal_t lit1, literal_t lit2) override;
+
+  literal_t fold_all(const std::vector<literal_t> &literals) override;
+  literal_t fold_any(const std::vector<literal_t> &literals) override;
 };
 
 } // namespace uasat

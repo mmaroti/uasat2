@@ -133,6 +133,16 @@ Tensor Tensor::constant(const std::shared_ptr<Logic> &logic,
   return tensor;
 }
 
+Tensor Tensor::diagonal(int dimension) {
+  Tensor tensor(BOOLEAN, {dimension, dimension});
+  for (int i = 0; i < dimension; i++)
+    for (int j = 0; j < dimension; j++)
+      tensor.storage[i * dimension + j] =
+          (i == j) ? BOOLEAN->TRUE : BOOLEAN->FALSE;
+
+  return tensor;
+}
+
 Tensor Tensor::polymer(const std::vector<int> &shape2,
                        const std::vector<int> &mapping) const {
 
@@ -220,6 +230,11 @@ Tensor Tensor::fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &),
   } while (scan.next());
 
   return tensor2;
+}
+
+Tensor
+Tensor::fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &)) const {
+  return constant(logic, {}, (logic.get()->*op)(storage));
 }
 
 literal_t Tensor::get_scalar() const {

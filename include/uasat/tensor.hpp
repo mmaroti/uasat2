@@ -58,10 +58,15 @@ protected:
 
   /**
    * Performs the given generic fold operation on the given tensor,
-   * at the selected coordinate.
+   * at the selected axes.
    */
   Tensor fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &),
                   const std::vector<bool> &selection) const;
+
+  /**
+   * Performs the given generic fold operation on all axes.
+   */
+  Tensor fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &)) const;
 
   /**
    * Returns the index of the element identified by the given coordinates.
@@ -91,9 +96,14 @@ public:
                          const std::vector<int> &shape, literal_t literal);
 
   /**
+   * Creates the equality relation of shape (dimension, size).
+   */
+  static Tensor diagonal(int dimension);
+
+  /**
    * Creates a new tensor of the given shape from the given old tensor with
    * permuted, identified or new coordinates. The mapping is a vector
-   * of length of the old tensor shape with entries identifing the coordinate
+   * of length of the old tensor shape with entries identifying the coordinate
    * in the new tensor.
    */
   Tensor polymer(const std::vector<int> &shape,
@@ -152,7 +162,11 @@ public:
     return fold_bin(&Logic::fold_all, selection);
   }
 
-  literal_t fold_all() const { return logic->fold_all(storage); }
+  /**
+   * Folds this tensor along all axes using the logical and operation and
+   * returns a scalar tensor with the result.
+   */
+  Tensor fold_all() const { return fold_bin(&Logic::fold_all); }
 
   /**
    * Fold the given tensor along the selected axes using the logical or
@@ -162,7 +176,11 @@ public:
     return fold_bin(&Logic::fold_any, selection);
   }
 
-  literal_t fold_any() const { return logic->fold_any(storage); }
+  /**
+   * Folds this tensor along all axes using the logical or operation and returns
+   * a scalar tensor with the result.
+   */
+  Tensor fold_any() const { return fold_bin(&Logic::fold_any); }
 
   /**
    * Returns the scalar value of a zero rank tensor.
