@@ -24,13 +24,13 @@
 
   <script src="validate.js"></script>
   <script>
-    var stdout = document.getElementById('stdout')
-    stdout.value = ''
+    var stdout = document.getElementById('stdout');
+    stdout.value = '';
     function run() {
-      stdout.value = ''
+      stdout.value = '';
       Module({
         'print': function (line) {
-          stdout.value += line;
+          stdout.value += (new Date()).getTime() + ' ' + line + '\n';
         }
       });
     }

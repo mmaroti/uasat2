@@ -106,7 +106,7 @@ int validate2(int size) {
   int count = 0;
   while (solver->solve()) {
     std::vector<uasat::literal_t> clause;
-    relation.logic_add(relation.get_solution(solver)).collect(clause);
+    relation.logic_add(relation.get_solution(solver)).get_clause(clause);
     solver->add_clause(clause);
     count += 1;
   }
@@ -115,7 +115,7 @@ int validate2(int size) {
 }
 
 int main() {
-  std::cout << "Calculating the 8th Bell number (4140 solutions): ";
+  std::cout << "Calculating the 8th Bell number (4140 solutions)" << std::endl;
 
   auto start = std::chrono::steady_clock::now();
   int result = validate2(8);
@@ -124,9 +124,9 @@ int main() {
                   .count();
 
   if (result != 4140)
-    std::cout << "incorrect answer of " << result << std::endl;
+    std::cout << "Incorrect answer of " << result << std::endl;
   else
-    std::cout << msecs << " milliseconds" << std::endl;
+    std::cout << "Finished in " << msecs << " milliseconds" << std::endl;
 
   return 0;
 }

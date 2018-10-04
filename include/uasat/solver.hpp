@@ -45,15 +45,15 @@ public:
   virtual literal_t logic_add(literal_t lit1, literal_t lit2) = 0;
 
   literal_t logic_or(literal_t lit1, literal_t lit2) {
-    return -logic_and(-lit1, -lit2);
+    return logic_not(logic_and(logic_not(lit1), logic_not(lit2)));
   }
 
   literal_t logic_leq(literal_t lit1, literal_t lit2) {
-    return -logic_and(lit1, -lit2);
+    return logic_not(logic_and(lit1, logic_not(lit2)));
   }
 
   literal_t logic_equ(literal_t lit1, literal_t lit2) {
-    return logic_add(lit1, -lit2);
+    return logic_add(lit1, logic_not(lit2));
   }
 
   virtual literal_t fold_all(const std::vector<literal_t> &literals);

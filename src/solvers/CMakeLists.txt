@@ -25,5 +25,6 @@ target_compile_features(uasat-minisat
 list(APPEND uasat_emscripten_solvers_srcs
     ${CMAKE_CURRENT_SOURCE_DIR}/minisat.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/minisat/minisat/core/Solver.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/minisat/minisat/simp/SimpSolver.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/minisat/minisat/utils/Options.cc)
 set(uasat_emscripten_solvers_srcs "${uasat_emscripten_solvers_srcs}" PARENT_SCOPE)

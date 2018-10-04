@@ -96,7 +96,7 @@ public:
                          const std::vector<int> &shape, literal_t literal);
 
   /**
-   * Creates the equality relation of shape (dimension, size).
+   * Creates the equality relation of shape (dimension, dimension).
    */
   static Tensor diagonal(int dimension);
 
@@ -196,7 +196,7 @@ public:
   /**
    * Adds the literals of this tensor to the clause.
    */
-  void collect(std::vector<literal_t> &clause) const;
+  void get_clause(std::vector<literal_t> &clause) const;
 
   /**
    * Prints out the tensor content without shape information.
