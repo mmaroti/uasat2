@@ -1,8 +1,9 @@
 find_program(emsripten_prog em++)
 if(NOT emsripten_prog)
-    message("Emscripten is not found")
+    message("Emscripten not found")
 else()
-    message("Emscripten applications are enabled")
-    add_subdirectory(validate)
-    add_subdirectory(testing)
+    message("Emscripten is enabled")
 endif()
+
+add_subdirectory(validate)
+add_subdirectory(testing)
