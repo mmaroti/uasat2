@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Drawing posets</title>
+  <meta charset="utf-8" />
+</head>
+
+<style>
+  svg {
+    border: 1px solid;
+    width: 900pt;
+  }
+
+  .edge line {
+    stroke: #aaa;
+  }
+
+  .node circle {
+    pointer-events: all;
+    stroke: none;
+  }
+</style>
+
+<body>
+  <svg></svg>
+
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="poset.js"></script>
+  <script>
+    draw_poset({
+      nodes: [
+        { id: "0", height: 0 },
+        { id: "1", height: 0 },
+        { id: "2", height: 1 },
+        { id: "3", height: 1 },
+        { id: "4", height: 2 },
+      ],
+      edges: [
+        { source: "0", target: "2" },
+        { source: "0", target: "3" },
+        { source: "1", target: "2" },
+        { source: "1", target: "3" },
+        { source: "2", target: "4" },
+        { source: "3", target: "4" },
+      ]
+    });
+  </script>
+</body>
+
+</html>
