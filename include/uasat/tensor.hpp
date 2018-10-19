@@ -183,6 +183,12 @@ public:
   Tensor fold_any() const { return fold_bin(&Logic::fold_any); }
 
   /**
+   * Folds this tensor along all axes using the exactly one is true operation
+   * and returns a scalar tensor with the result.
+   */
+  Tensor fold_one() const { return fold_bin(&Logic::fold_one); }
+
+  /**
    * Returns the scalar value of a zero rank tensor.
    */
   literal_t get_scalar() const;

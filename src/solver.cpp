@@ -48,6 +48,18 @@ literal_t Logic::fold_sum(const std::vector<literal_t> &literals) {
   return res;
 }
 
+literal_t Logic::fold_one(const std::vector<literal_t> &literals) {
+  literal_t min1 = FALSE;
+  literal_t min2 = FALSE;
+
+  for (literal_t lit : literals) {
+    min2 = logic_or(min2, logic_and(min1, lit));
+    min1 = logic_or(min1, lit);
+  }
+
+  return logic_and(min1, logic_not(min2));
+}
+
 class Boolean : public Logic {
 public:
   virtual literal_t logic_and(literal_t lit1, literal_t lit2) override {

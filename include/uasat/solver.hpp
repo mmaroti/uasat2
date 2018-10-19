@@ -59,6 +59,7 @@ public:
   virtual literal_t fold_all(const std::vector<literal_t> &literals);
   virtual literal_t fold_any(const std::vector<literal_t> &literals);
   virtual literal_t fold_sum(const std::vector<literal_t> &literals);
+  virtual literal_t fold_one(const std::vector<literal_t> &literals);
 };
 
 extern const std::shared_ptr<Logic> BOOLEAN;
