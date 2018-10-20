@@ -25,7 +25,7 @@
 
 #include <ostream>
 
-#include "uasat/solver.hpp"
+#include "solver.hpp"
 
 namespace uasat {
 
@@ -108,6 +108,11 @@ public:
   static Tensor diagonal(int dimension);
 
   /**
+   * Creates the less than relation of shape (dimension, dimension).
+   */
+  static Tensor lessthan(int dimension);
+
+  /**
    * Creates a new tensor of the given shape from the given old tensor with
    * permuted, identified or new coordinates. The mapping is a vector
    * of length of the old tensor shape with entries identifying the coordinate
@@ -188,6 +193,20 @@ public:
    * a scalar tensor with the result.
    */
   Tensor fold_any() const { return fold_bin(&Logic::fold_any); }
+
+  /**
+   * Fold the given tensor along the selected axes using the binary addition
+   * operation.
+   */
+  Tensor fold_sum(const std::vector<bool> &selection) const {
+    return fold_bin(&Logic::fold_sum, selection);
+  }
+
+  /**
+   * Folds this tensor along all axes using the binary addition operation and
+   * returns a scalar tensor with the result.
+   */
+  Tensor fold_sum() const { return fold_bin(&Logic::fold_sum); }
 
   /**
    * Fold the given tensor along the selected axes using the exactly one is true

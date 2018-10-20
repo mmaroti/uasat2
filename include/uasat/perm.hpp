@@ -23,8 +23,9 @@
 #ifndef UASAT_CLASSES_HPP
 #define UASAT_CLASSES_HPP
 
-#include "tensor.hpp"
 #include <vector>
+
+#include "tensor.hpp"
 
 namespace uasat {
 
@@ -73,8 +74,10 @@ public:
   std::vector<int> get_shape() const override;
   Tensor contains(const Tensor &elem) override;
   Tensor identity() override;
-  Tensor inverse(const Tensor &elem) override;
-  Tensor product(const Tensor &elem1, const Tensor &elem2) override;
+  Tensor inverse(const Tensor &perm) override;
+  Tensor product(const Tensor &perm1, const Tensor &perm2) override;
+
+  Tensor even(const Tensor &perm);
 };
 
 } // namespace uasat

@@ -121,17 +121,29 @@ Tensor SymmetricGroup::contains(const Tensor &elem) {
 
 Tensor SymmetricGroup::identity() { return Tensor::diagonal(size); }
 
-Tensor SymmetricGroup::inverse(const Tensor &elem) {
-  assert(elem.get_shape() == get_shape());
-  return elem.polymer({size, size}, {1, 0});
+Tensor SymmetricGroup::inverse(const Tensor &perm) {
+  assert(perm.get_shape() == get_shape());
+  return perm.polymer({size, size}, {1, 0});
 }
 
-Tensor SymmetricGroup::product(const Tensor &elem1, const Tensor &elem2) {
-  assert(elem1.get_shape() == get_shape());
-  assert(elem2.get_shape() == get_shape());
-  return elem1.polymer({size, size, size}, {0, 1})
-      .logic_and(elem2.polymer({size, size, size}, {1, 2}))
+Tensor SymmetricGroup::product(const Tensor &perm1, const Tensor &perm2) {
+  assert(perm1.get_shape() == get_shape());
+  assert(perm2.get_shape() == get_shape());
+  return perm1.polymer({size, size, size}, {0, 1})
+      .logic_and(perm2.polymer({size, size, size}, {1, 2}))
       .fold_any({false, true, false});
+}
+
+Tensor SymmetricGroup::even(const Tensor &perm) {
+  assert(perm.get_shape() == get_shape());
+  Tensor less = Tensor::lessthan(size);
+  Tensor rel1 = less.polymer({size, size, size}, {1, 0})
+                    .logic_and(perm.polymer({size, size, size}, {0, 2}))
+                    .fold_any({true, false, false});
+  Tensor rel2 = less.polymer({size, size, size}, {2, 0})
+                    .logic_and(perm.polymer({size, size, size}, {1, 0}))
+                    .fold_any({true, false, false});
+  return rel1.logic_and(rel2).fold_sum();
 }
 
 } // namespace uasat

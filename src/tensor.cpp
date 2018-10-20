@@ -143,6 +143,16 @@ Tensor Tensor::diagonal(int dimension) {
   return tensor;
 }
 
+Tensor Tensor::lessthan(int dimension) {
+  Tensor tensor(BOOLEAN, {dimension, dimension});
+  for (int i = 0; i < dimension; i++)
+    for (int j = 0; j < dimension; j++)
+      tensor.storage[i * dimension + j] =
+          (i < j) ? BOOLEAN->TRUE : BOOLEAN->FALSE;
+
+  return tensor;
+}
+
 Tensor Tensor::polymer(const std::vector<int> &shape2,
                        const std::vector<int> &mapping) const {
 
