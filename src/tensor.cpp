@@ -190,10 +190,12 @@ Tensor Tensor::logic_bin(literal_t (Logic::*op)(literal_t, literal_t),
   if (shape != tensor2.shape)
     throw std::invalid_argument("non-matching shape");
 
-  Tensor tensor3(logic, shape);
+  std::shared_ptr<Logic> logic3 = logic != BOOLEAN ? logic : tensor2.logic;
+  Tensor tensor3(logic3, shape);
+
   for (size_t index = 0; index < tensor3.storage.size(); index++)
     tensor3.storage[index] =
-        (logic.get()->*op)(storage[index], tensor2.storage[index]);
+        (logic3.get()->*op)(storage[index], tensor2.storage[index]);
 
   return tensor3;
 }

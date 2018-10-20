@@ -23,22 +23,11 @@
 #include <chrono>
 #include <iostream>
 
-#include "uasat/tensor.hpp"
+#include "uasat/perm.hpp"
 
 int main() {
-  std::shared_ptr<uasat::Solver> solver = uasat::Solver::create();
-
-  uasat::Tensor tensor1 = uasat::Tensor::variable(solver, {2, 2, 3});
-  std::cout << tensor1 << std::endl;
-
-  uasat::Tensor tensor2 = tensor1.logic_not();
-  std::cout << tensor2 << std::endl;
-
-  uasat::Tensor tensor3 = tensor2.polymer({3, 2, 2}, {1, 1, 0});
-  std::cout << tensor3 << std::endl;
-
-  uasat::Tensor tensor4 = tensor1.logic_add(tensor2);
-  std::cout << tensor4 << std::endl;
+  uasat::SymmetricGroup s(4);
+  s.test_axioms();
 
   return 0;
 }

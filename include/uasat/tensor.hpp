@@ -30,17 +30,19 @@
 namespace uasat {
 
 class Tensor {
-public:
-  const std::shared_ptr<Logic> logic;
+protected:
+  /**
+   * The logic underlying this tensor.
+   */
+  std::shared_ptr<Logic> logic;
 
   /**
    * The shape of a tensor is a list of positive integers describing the
    * dimension of the tensor along the given axes. The rank of the tensor is the
    * number of axes.
    */
-  const std::vector<int> shape;
+  std::vector<int> shape;
 
-protected:
   /**
    * The elements of the tensor are stored in an array. Each element is
    * identified by an index within this array and also by a list of coordinates,
@@ -74,6 +76,11 @@ protected:
   size_t __very_slow_get_index(const std::vector<int> &coordinates) const;
 
 public:
+  /**
+   * Returns the shape of this tensor.
+   */
+  std::vector<int> get_shape() const { return shape; }
+
   /**
    * Returns the literal in this tensor at the given coordinates.
    */
@@ -181,6 +188,14 @@ public:
    * a scalar tensor with the result.
    */
   Tensor fold_any() const { return fold_bin(&Logic::fold_any); }
+
+  /**
+   * Fold the given tensor along the selected axes using the exactly one is true
+   * operation.
+   */
+  Tensor fold_one(const std::vector<bool> &selection) const {
+    return fold_bin(&Logic::fold_one, selection);
+  }
 
   /**
    * Folds this tensor along all axes using the exactly one is true operation

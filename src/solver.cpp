@@ -21,6 +21,7 @@
  */
 
 #include <algorithm>
+#include <cassert>
 
 #include "solvers/minisat.hpp"
 #include "uasat/solver.hpp"
@@ -63,15 +64,18 @@ literal_t Logic::fold_one(const std::vector<literal_t> &literals) {
 class Boolean : public Logic {
 public:
   virtual literal_t logic_and(literal_t lit1, literal_t lit2) override {
+    assert(FALSE <= lit1 && lit1 <= TRUE && FALSE <= lit2 && lit2 <= TRUE);
     return lit1 <= lit2 ? lit1 : lit2;
   }
 
   virtual literal_t logic_add(literal_t lit1, literal_t lit2) override {
-    literal_t s = lit1 ^ lit2;                   // sign(lit1*b)
-    lit1 = lit1 < 0 ? -lit1 : lit1;              // abs(lit1)
-    lit2 = lit2 < 0 ? -lit2 : lit2;              // abs(lit2)
-    literal_t lit3 = lit1 <= lit2 ? lit1 : lit2; // min(lit1,lit2)
-    return s < 0 ? -lit3 : lit3;
+    assert(FALSE <= lit1 && lit1 <= TRUE && FALSE <= lit2 && lit2 <= TRUE);
+    literal_t sign = lit1 ^ lit2;
+    literal_t abs1 = lit1 < 0 ? -lit1 : lit1;
+    literal_t abs2 = lit2 < 0 ? -lit2 : lit2;
+    literal_t abs3 = abs1 <= abs2 ? abs1 : abs2;
+    literal_t lit3 = sign < 0 ? abs3 : -abs3;
+    return lit3;
   }
 };
 
