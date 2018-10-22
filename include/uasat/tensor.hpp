@@ -71,6 +71,14 @@ protected:
   Tensor fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &)) const;
 
   /**
+   * Performs the given operation on two binary numbers.
+   */
+  Tensor binary_bin(
+      std::vector<literal_t> (Logic::*op)(const std::vector<literal_t> &,
+                                          const std::vector<literal_t> &),
+      const Tensor &tensor2, int data_rank) const;
+
+  /**
    * Returns the index of the element identified by the given coordinates.
    */
   size_t __very_slow_get_index(const std::vector<int> &coordinates) const;
@@ -82,10 +90,23 @@ public:
   std::vector<int> get_shape() const { return shape; }
 
   /**
+   * Returns the underlying logic object.
+   */
+  std::shared_ptr<Logic> get_logic() const { return logic; }
+
+  /**
    * Returns the literal in this tensor at the given coordinates.
    */
   literal_t __very_slow_get_value(const std::vector<int> &coords) const {
     return storage[__very_slow_get_index(coords)];
+  }
+
+  /**
+   * Returns the literal in this tensor at the given coordinates.
+   */
+  void __very_slow_set_value(const std::vector<int> &coords,
+                             literal_t literal) {
+    storage[__very_slow_get_index(coords)] = literal;
   }
 
   /**
@@ -114,12 +135,19 @@ public:
 
   /**
    * Creates a new tensor of the given shape from the given old tensor with
-   * permuted, identified or new coordinates. The mapping is a vector
+   * permuted, identified or new dummy coordinates. The mapping is a vector
    * of length of the old tensor shape with entries identifying the coordinate
    * in the new tensor.
    */
   Tensor polymer(const std::vector<int> &shape,
                  const std::vector<int> &mapping) const;
+
+  /**
+   * Reshapes the tensor so that the number and linear indices of elements
+   * stays the same but only shape vector is changed. The new shape must
+   * define the same number of elements.
+   */
+  Tensor reshape(const std::vector<int> &shape) const;
 
   /**
    * Creates a new tensor from the given tensor whose entries are negated.
@@ -223,6 +251,13 @@ public:
   Tensor fold_one() const { return fold_bin(&Logic::fold_one); }
 
   /**
+   * Performs the additon of binary numbers represented as two-complements.
+   */
+  Tensor binary_add(const Tensor &tensor2, int data_rank = 1) const {
+    return binary_bin(&Logic::binary_add, tensor2, data_rank);
+  }
+
+  /**
    * Returns the scalar value of a zero rank tensor.
    */
   literal_t get_scalar() const;
@@ -236,7 +271,7 @@ public:
   /**
    * Adds the literals of this tensor to the clause.
    */
-  void get_clause(std::vector<literal_t> &clause) const;
+  void extend_clause(std::vector<literal_t> &clause) const;
 
   /**
    * Prints out the tensor content without shape information.

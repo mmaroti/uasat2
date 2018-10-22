@@ -28,37 +28,64 @@
 
 namespace uasat {
 
-literal_t Logic::fold_all(const std::vector<literal_t> &literals) {
+literal_t Logic::fold_all(const std::vector<literal_t> &lits) {
   literal_t res = TRUE;
-  for (literal_t lit : literals)
+  for (literal_t lit : lits)
     res = logic_and(res, lit);
   return res;
 }
 
-literal_t Logic::fold_any(const std::vector<literal_t> &literals) {
+literal_t Logic::fold_any(const std::vector<literal_t> &lits) {
   literal_t res = FALSE;
-  for (literal_t lit : literals)
+  for (literal_t lit : lits)
     res = logic_or(res, lit);
   return res;
 }
 
-literal_t Logic::fold_sum(const std::vector<literal_t> &literals) {
+literal_t Logic::fold_sum(const std::vector<literal_t> &lits) {
   literal_t res = TRUE;
-  for (literal_t lit : literals)
+  for (literal_t lit : lits)
     res = logic_add(res, lit);
   return res;
 }
 
-literal_t Logic::fold_one(const std::vector<literal_t> &literals) {
+literal_t Logic::fold_one(const std::vector<literal_t> &lits) {
   literal_t min1 = FALSE;
   literal_t min2 = FALSE;
 
-  for (literal_t lit : literals) {
+  for (literal_t lit : lits) {
     min2 = logic_or(min2, logic_and(min1, lit));
     min1 = logic_or(min1, lit);
   }
 
   return logic_and(min1, logic_not(min2));
+}
+
+literal_t Logic::full_adder(literal_t lit1, literal_t lit2, literal_t &carry) {
+  literal_t s = logic_add(logic_add(lit1, lit2), carry);
+  carry = logic_or(logic_and(lit1, lit2),
+                   logic_or(logic_and(lit1, carry), logic_and(lit2, carry)));
+  return s;
+}
+
+std::vector<literal_t> Logic::binary_add(const std::vector<literal_t> &lits1,
+                                         const std::vector<literal_t> &lits2) {
+  assert(lits1.size() == lits2.size());
+  std::vector<literal_t> lits3;
+
+  literal_t carry = FALSE;
+  for (size_t i = 0; i < lits1.size(); i++) {
+    lits3[i] = full_adder(lits1[i], lits2[i], carry);
+  }
+
+  return lits3;
+}
+
+std::shared_ptr<Logic> Logic::join(std::shared_ptr<Logic> logic1,
+                                   std::shared_ptr<Logic> logic2) {
+  if (logic1 != logic2 && logic1 != BOOLEAN && logic2 != BOOLEAN)
+    throw std::invalid_argument("non-matching logics");
+  return logic1 != BOOLEAN ? logic1 : logic2;
 }
 
 class Boolean : public Logic {
@@ -131,11 +158,11 @@ literal_t Solver::logic_add(literal_t lit1, literal_t lit2) {
   return lit3;
 }
 
-literal_t Solver::fold_all(const std::vector<literal_t> &literals) {
+literal_t Solver::fold_all(const std::vector<literal_t> &lits) {
   std::vector<literal_t> clause;
-  clause.reserve(literals.size() + 1);
+  clause.reserve(lits.size() + 1);
 
-  for (const literal_t &lit : literals) {
+  for (const literal_t &lit : lits) {
     if (lit == FALSE ||
         std::find(clause.begin(), clause.end(), logic_not(lit)) != clause.end())
       return FALSE;
@@ -161,11 +188,11 @@ literal_t Solver::fold_all(const std::vector<literal_t> &literals) {
   return lit2;
 }
 
-literal_t Solver::fold_any(const std::vector<literal_t> &literals) {
+literal_t Solver::fold_any(const std::vector<literal_t> &lits) {
   std::vector<literal_t> clause;
-  clause.reserve(literals.size() + 1);
+  clause.reserve(lits.size() + 1);
 
-  for (const literal_t &lit : literals) {
+  for (const literal_t &lit : lits) {
     if (lit == TRUE ||
         std::find(clause.begin(), clause.end(), logic_not(lit)) != clause.end())
       return TRUE;

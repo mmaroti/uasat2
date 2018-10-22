@@ -106,7 +106,7 @@ int validate2(int size) {
   int count = 0;
   while (solver->solve()) {
     std::vector<uasat::literal_t> clause;
-    relation.logic_add(relation.get_solution(solver)).get_clause(clause);
+    relation.logic_add(relation.get_solution(solver)).extend_clause(clause);
     solver->add_clause(clause);
     count += 1;
   }

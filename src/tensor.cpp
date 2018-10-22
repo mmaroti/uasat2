@@ -184,6 +184,15 @@ Tensor Tensor::polymer(const std::vector<int> &shape2,
   return tensor2;
 }
 
+Tensor Tensor::reshape(const std::vector<int> &shape2) const {
+  Tensor tensor2(logic, shape2);
+  if (storage.size() != tensor2.storage.size())
+    throw std::invalid_argument("invalid number of elements");
+
+  std::copy(storage.begin(), storage.end(), tensor2.storage.begin());
+  return tensor2;
+}
+
 Tensor Tensor::logic_not() const {
   Tensor tensor2(logic, shape);
 
@@ -195,12 +204,10 @@ Tensor Tensor::logic_not() const {
 
 Tensor Tensor::logic_bin(literal_t (Logic::*op)(literal_t, literal_t),
                          const Tensor &tensor2) const {
-  if (logic != tensor2.logic && logic != BOOLEAN && tensor2.logic != BOOLEAN)
-    throw std::invalid_argument("non-matching logic");
   if (shape != tensor2.shape)
     throw std::invalid_argument("non-matching shape");
 
-  std::shared_ptr<Logic> logic3 = logic != BOOLEAN ? logic : tensor2.logic;
+  std::shared_ptr<Logic> logic3 = Logic::join(logic, tensor2.logic);
   Tensor tensor3(logic3, shape);
 
   for (size_t index = 0; index < tensor3.storage.size(); index++)
@@ -249,6 +256,38 @@ Tensor::fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &)) const {
   return constant(logic, {}, (logic.get()->*op)(storage));
 }
 
+Tensor Tensor::binary_bin(
+    std::vector<literal_t> (Logic::*op)(const std::vector<literal_t> &,
+                                        const std::vector<literal_t> &),
+    const Tensor &tensor2, int data_rank) const {
+  if (data_rank < 0 || shape.size() < (size_t)data_rank)
+    throw std::invalid_argument("invalid data rank");
+  if (shape != tensor2.shape)
+    throw std::invalid_argument("non-matching shape");
+
+  std::shared_ptr<Logic> logic3 = Logic::join(logic, tensor2.logic);
+  Tensor tensor3(logic3, shape);
+
+  size_t stride = 1;
+  for (size_t i = data_rank; i < shape.size(); i++)
+    stride *= shape[i];
+
+  std::vector<literal_t> temp1(stride);
+  std::vector<literal_t> temp2(stride);
+  for (size_t index = 0; index < tensor3.storage.size(); index++) {
+    std::copy(storage.begin() + index * stride,
+              storage.begin() + (index + 1) * stride, temp1.begin());
+    std::copy(tensor2.storage.begin() + index * stride,
+              tensor2.storage.begin() + (index + 1) * stride, temp2.begin());
+    std::vector<literal_t> temp3 = (logic.get()->*op)(temp1, temp2);
+    assert(temp3.size() == stride);
+    std::copy(temp3.begin(), temp3.end(),
+              tensor3.storage.begin() + index * stride);
+  }
+
+  return tensor3;
+}
+
 literal_t Tensor::get_scalar() const {
   if (storage.size() != 1)
     throw std::invalid_argument("tensor must be scalar");
@@ -266,7 +305,7 @@ Tensor Tensor::get_solution(const std::shared_ptr<Solver> &solver) const {
   return tensor;
 }
 
-void Tensor::get_clause(std::vector<literal_t> &clause) const {
+void Tensor::extend_clause(std::vector<literal_t> &clause) const {
   for (size_t index = 0; index < storage.size(); index++)
     clause.push_back(storage[index]);
 }

@@ -7,3 +7,4 @@ endif()
 
 add_subdirectory(validate)
 add_subdirectory(testing)
+add_subdirectory(simdgen)
