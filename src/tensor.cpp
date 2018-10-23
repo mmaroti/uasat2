@@ -94,6 +94,21 @@ Tensor::Tensor(const std::shared_ptr<Logic> &logic,
                const std::vector<int> &shape)
     : logic(logic), shape(shape), storage(get_storage_size(shape)) {}
 
+std::shared_ptr<Logic> Tensor::join_logic(const Tensor &tensor) const {
+  if (logic != tensor.logic && logic != BOOLEAN && tensor.logic != BOOLEAN)
+    throw std::invalid_argument("non-matching tensor logics");
+  return logic != BOOLEAN ? logic : tensor.logic;
+}
+
+std::vector<int> Tensor::join_shape(const Tensor &tensor) const {
+  size_t m = std::min(shape.size(), tensor.shape.size());
+  for (size_t i = 0; i < m; i++)
+    if (shape[i] != tensor.shape[i])
+      throw std::invalid_argument("non-matching tensor shapes");
+
+  return shape.size() >= tensor.shape.size() ? shape : tensor.shape;
+}
+
 size_t
 Tensor::__very_slow_get_index(const std::vector<int> &coordinates) const {
   if (coordinates.size() != shape.size())
@@ -124,11 +139,12 @@ Tensor Tensor::variable(const std::shared_ptr<Solver> &solver,
   return tensor;
 }
 
-Tensor Tensor::constant(const std::shared_ptr<Logic> &logic,
-                        const std::vector<int> &shape, literal_t literal) {
-  Tensor tensor(logic, shape);
-  for (literal_t &value : tensor.storage)
-    value = literal;
+Tensor Tensor::constant(const std::vector<int> &shape, bool value) {
+  Tensor tensor(BOOLEAN, shape);
+
+  literal_t literal = value ? BOOLEAN->TRUE : BOOLEAN->FALSE;
+  for (literal_t &lit : tensor.storage)
+    lit = literal;
 
   return tensor;
 }
@@ -207,7 +223,7 @@ Tensor Tensor::logic_bin(literal_t (Logic::*op)(literal_t, literal_t),
   if (shape != tensor2.shape)
     throw std::invalid_argument("non-matching shape");
 
-  std::shared_ptr<Logic> logic3 = Logic::join(logic, tensor2.logic);
+  std::shared_ptr<Logic> logic3 = join_logic(tensor2);
   Tensor tensor3(logic3, shape);
 
   for (size_t index = 0; index < tensor3.storage.size(); index++)
@@ -253,7 +269,9 @@ Tensor Tensor::fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &),
 
 Tensor
 Tensor::fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &)) const {
-  return constant(logic, {}, (logic.get()->*op)(storage));
+  Tensor tensor(logic, {});
+  tensor.storage[0] = (logic.get()->*op)(storage);
+  return tensor;
 }
 
 Tensor Tensor::binary_bin(

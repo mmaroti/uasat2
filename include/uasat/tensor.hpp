@@ -83,6 +83,18 @@ protected:
    */
   size_t __very_slow_get_index(const std::vector<int> &coordinates) const;
 
+  /**
+   * Checks if the logics of the other tensor is compatible, that is they are
+   * either equals or one of them is the BOOLEAN one.
+   */
+  std::shared_ptr<Logic> join_logic(const Tensor &tensor) const;
+
+  /**
+   * Checks if the shapes of the other tensor is compatible, that is they are
+   * equal to their minimum length.
+   */
+  std::vector<int> join_shape(const Tensor &tensor) const;
+
 public:
   /**
    * Returns the shape of this tensor.
@@ -118,10 +130,9 @@ public:
                          bool polarity = false);
 
   /**
-   * Creates a new tensor with the given shape filled with the same literal.
+   * Creates a new tensor with the given shape filled with the same value.
    */
-  static Tensor constant(const std::shared_ptr<Logic> &logic,
-                         const std::vector<int> &shape, literal_t literal);
+  static Tensor constant(const std::vector<int> &shape, bool value);
 
   /**
    * Creates the equality relation of shape (dimension, dimension).
@@ -251,7 +262,7 @@ public:
   Tensor fold_one() const { return fold_bin(&Logic::fold_one); }
 
   /**
-   * Performs the additon of binary numbers represented as two-complements.
+   * Performs the addition of binary numbers represented as two-complements.
    */
   Tensor binary_add(const Tensor &tensor2, int data_rank = 1) const {
     return binary_bin(&Logic::binary_add, tensor2, data_rank);

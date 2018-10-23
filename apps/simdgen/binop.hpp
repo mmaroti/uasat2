@@ -90,7 +90,7 @@ struct BinOp {
 
     case MM_ADD_EPI8: {
       assert(size % 8 == 0);
-      Tensor reg3 = Tensor::constant(logic3, {size}, logic3->FALSE);
+      Tensor reg3 = Tensor::constant({size}, false);
       for (int i = 0; i < size; i += 8) {
         literal_t carry = logic3->FALSE;
         for (int j = i; j < i + 8; j++) {
@@ -106,7 +106,7 @@ struct BinOp {
     case MM_SUB_EPI8: {
       assert(size % 8 == 0);
       reg2 = reg2.logic_not();
-      Tensor reg3 = Tensor::constant(logic3, {size}, logic3->FALSE);
+      Tensor reg3 = Tensor::constant({size}, false);
       for (int i = 0; i < size; i += 8) {
         literal_t carry = logic3->TRUE;
         for (int j = i; j < i + 8; j++) {
