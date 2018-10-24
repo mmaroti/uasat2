@@ -79,11 +79,11 @@ public:
 };
 
 size_t get_storage_size(const std::vector<int> &shape) {
-  int size = 1;
+  size_t size = 1;
   for (int dimension : shape) {
     if (dimension <= 0)
       throw std::invalid_argument("dimension must be positive");
-    if (size > std::numeric_limits<int>::max() / dimension)
+    if (size > std::numeric_limits<size_t>::max() / dimension)
       throw std::invalid_argument("tensor size is too big");
     size *= dimension;
   }
@@ -98,15 +98,6 @@ std::shared_ptr<Logic> Tensor::join_logic(const Tensor &tensor) const {
   if (logic != tensor.logic && logic != BOOLEAN && tensor.logic != BOOLEAN)
     throw std::invalid_argument("non-matching tensor logics");
   return logic != BOOLEAN ? logic : tensor.logic;
-}
-
-std::vector<int> Tensor::join_shape(const Tensor &tensor) const {
-  size_t m = std::min(shape.size(), tensor.shape.size());
-  for (size_t i = 0; i < m; i++)
-    if (shape[i] != tensor.shape[i])
-      throw std::invalid_argument("non-matching tensor shapes");
-
-  return shape.size() >= tensor.shape.size() ? shape : tensor.shape;
 }
 
 size_t
@@ -209,6 +200,56 @@ Tensor Tensor::reshape(const std::vector<int> &shape2) const {
   return tensor2;
 }
 
+std::vector<Tensor> Tensor::slices() const {
+  if (shape.size() <= 0)
+    throw std::invalid_argument("runk must be positive");
+
+  std::vector<int> shape2(shape.size() - 1);
+  std::copy(shape.begin() + 1, shape.end(), shape2.begin());
+
+  int dim0 = shape[0];
+  size_t size = storage.size() / dim0;
+
+  std::vector<Tensor> slices;
+  slices.reserve(dim0);
+
+  for (int i = 0; i < shape[0]; i++)
+    slices.push_back(Tensor(logic, shape2));
+
+  for (size_t i = 0; i < size; i++)
+    for (int j = 0; j < dim0; j++)
+      slices[j].storage[i] = storage[i * dim0 + j];
+
+  return slices;
+}
+
+Tensor Tensor::stack(const std::vector<Tensor> &slices) {
+  if (slices.empty())
+    throw std::invalid_argument("slices list cannot be empty");
+
+  std::vector<int> shape = slices[0].shape;
+  std::shared_ptr<Logic> logic = slices[0].logic;
+
+  size_t dim = slices.size();
+
+  for (size_t i = 1; i < dim; i++) {
+    if (shape != slices[i].shape)
+      throw std::invalid_argument("slices must have same shape");
+    logic = Logic::join(logic, slices[i].logic);
+  }
+
+  shape.insert(shape.begin(), slices.size());
+  Tensor tensor(logic, shape);
+
+  size_t size = slices[0].storage.size();
+
+  for (size_t i = 0; i < size; i++)
+    for (size_t j = 0; j < slices.size(); j++)
+      tensor.storage[i * size + j] = slices[j].storage[i];
+
+  return tensor;
+}
+
 Tensor Tensor::logic_not() const {
   Tensor tensor2(logic, shape);
 
@@ -272,38 +313,6 @@ Tensor::fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &)) const {
   Tensor tensor(logic, {});
   tensor.storage[0] = (logic.get()->*op)(storage);
   return tensor;
-}
-
-Tensor Tensor::binary_bin(
-    std::vector<literal_t> (Logic::*op)(const std::vector<literal_t> &,
-                                        const std::vector<literal_t> &),
-    const Tensor &tensor2, int data_rank) const {
-  if (data_rank < 0 || shape.size() < (size_t)data_rank)
-    throw std::invalid_argument("invalid data rank");
-  if (shape != tensor2.shape)
-    throw std::invalid_argument("non-matching shape");
-
-  std::shared_ptr<Logic> logic3 = Logic::join(logic, tensor2.logic);
-  Tensor tensor3(logic3, shape);
-
-  size_t stride = 1;
-  for (size_t i = data_rank; i < shape.size(); i++)
-    stride *= shape[i];
-
-  std::vector<literal_t> temp1(stride);
-  std::vector<literal_t> temp2(stride);
-  for (size_t index = 0; index < tensor3.storage.size(); index++) {
-    std::copy(storage.begin() + index * stride,
-              storage.begin() + (index + 1) * stride, temp1.begin());
-    std::copy(tensor2.storage.begin() + index * stride,
-              tensor2.storage.begin() + (index + 1) * stride, temp2.begin());
-    std::vector<literal_t> temp3 = (logic.get()->*op)(temp1, temp2);
-    assert(temp3.size() == stride);
-    std::copy(temp3.begin(), temp3.end(),
-              tensor3.storage.begin() + index * stride);
-  }
-
-  return tensor3;
 }
 
 literal_t Tensor::get_scalar() const {

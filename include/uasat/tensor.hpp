@@ -71,14 +71,6 @@ protected:
   Tensor fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &)) const;
 
   /**
-   * Performs the given operation on two binary numbers.
-   */
-  Tensor binary_bin(
-      std::vector<literal_t> (Logic::*op)(const std::vector<literal_t> &,
-                                          const std::vector<literal_t> &),
-      const Tensor &tensor2, int data_rank) const;
-
-  /**
    * Returns the index of the element identified by the given coordinates.
    */
   size_t __very_slow_get_index(const std::vector<int> &coordinates) const;
@@ -88,12 +80,6 @@ protected:
    * either equals or one of them is the BOOLEAN one.
    */
   std::shared_ptr<Logic> join_logic(const Tensor &tensor) const;
-
-  /**
-   * Checks if the shapes of the other tensor is compatible, that is they are
-   * equal to their minimum length.
-   */
-  std::vector<int> join_shape(const Tensor &tensor) const;
 
 public:
   /**
@@ -159,6 +145,18 @@ public:
    * define the same number of elements.
    */
   Tensor reshape(const std::vector<int> &shape) const;
+
+  /**
+   * Returns the slices of this tensor along the first axis. This is the inverse
+   * of the stack operation.
+   */
+  std::vector<Tensor> slices() const;
+
+  /**
+   * Combines a vector of tensors into a new tensor whose first dimension is
+   * the size of the vector. This is the inverse of the slices operation.
+   */
+  static Tensor stack(const std::vector<Tensor> &slices);
 
   /**
    * Creates a new tensor from the given tensor whose entries are negated.
@@ -260,13 +258,6 @@ public:
    * and returns a scalar tensor with the result.
    */
   Tensor fold_one() const { return fold_bin(&Logic::fold_one); }
-
-  /**
-   * Performs the addition of binary numbers represented as two-complements.
-   */
-  Tensor binary_add(const Tensor &tensor2, int data_rank = 1) const {
-    return binary_bin(&Logic::binary_add, tensor2, data_rank);
-  }
 
   /**
    * Returns the scalar value of a zero rank tensor.
