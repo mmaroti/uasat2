@@ -25,19 +25,20 @@
 
 #include "uasat/perm.hpp"
 
-int main1() {
+int main() {
   uasat::SymmetricGroup s(4);
   s.test_axioms();
 
   return 0;
 }
 
-int main() {
+int main2() {
   uasat::Tensor a = uasat::Tensor::lessthan(4);
 
-  for (uasat::Tensor b : a.slices())
+  for (uasat::Tensor b : a.slices(1))
     std::cout << b << std::endl;
 
-  std::cout << a << std::endl;
-  std::cout << uasat::Tensor::stack(a.slices()) << std::endl;
+  std::cout << uasat::Tensor::stack(a.slices(1)).logic_add(a) << std::endl;
+
+  return 0;
 }

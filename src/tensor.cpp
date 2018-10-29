@@ -200,25 +200,30 @@ Tensor Tensor::reshape(const std::vector<int> &shape2) const {
   return tensor2;
 }
 
-std::vector<Tensor> Tensor::slices() const {
-  if (shape.size() <= 0)
-    throw std::invalid_argument("runk must be positive");
+std::vector<Tensor> Tensor::slices(int rank) const {
+  if (rank <= 0)
+    throw std::invalid_argument("invalid rank argument");
+  if (shape.size() < (size_t)rank)
+    throw std::invalid_argument("tensor rank is small");
 
-  std::vector<int> shape2(shape.size() - 1);
-  std::copy(shape.begin() + 1, shape.end(), shape2.begin());
+  size_t size1 = 1;
+  for (int i = 0; i < rank; i++)
+    size1 *= shape[i];
+  size_t size2 = storage.size() / size1;
+  assert(size1 * size2 == storage.size());
 
-  int dim0 = shape[0];
-  size_t size = storage.size() / dim0;
+  std::vector<int> shape2(shape.size() - rank);
+  std::copy(shape.begin() + rank, shape.end(), shape2.begin());
 
   std::vector<Tensor> slices;
-  slices.reserve(dim0);
+  slices.reserve(size1);
 
-  for (int i = 0; i < shape[0]; i++)
+  for (size_t i = 0; i < size1; i++)
     slices.push_back(Tensor(logic, shape2));
 
-  for (size_t i = 0; i < size; i++)
-    for (int j = 0; j < dim0; j++)
-      slices[j].storage[i] = storage[i * dim0 + j];
+  for (size_t i = 0; i < size2; i++)
+    for (size_t j = 0; j < size1; j++)
+      slices[j].storage[i] = storage[i * size1 + j];
 
   return slices;
 }
@@ -313,6 +318,28 @@ Tensor::fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &)) const {
   Tensor tensor(logic, {});
   tensor.storage[0] = (logic.get()->*op)(storage);
   return tensor;
+}
+
+Tensor Tensor::fold_all(int rank) const {
+  std::vector<Tensor> tensors = slices(rank);
+  assert(tensors.size() > 0);
+
+  Tensor data = tensors[0];
+  for (size_t i = 1; i < tensors.size(); i++)
+    data = data.logic_and(tensors[i]);
+
+  return data;
+}
+
+Tensor Tensor::fold_sum(int rank) const {
+  std::vector<Tensor> tensors = slices(rank);
+  assert(tensors.size() > 0);
+
+  Tensor data = tensors[0];
+  for (size_t i = 1; i < tensors.size(); i++)
+    data = data.logic_add(tensors[i]);
+
+  return data;
 }
 
 literal_t Tensor::get_scalar() const {

@@ -71,33 +71,17 @@ int validate2(int size) {
 
   uasat::Tensor relation = uasat::Tensor::variable(solver, {size, size});
 
-  uasat::Tensor reflexive = relation.polymer({size}, {0, 0}).fold_all();
+  uasat::Tensor reflexive = relation.polymer({size}, {0, 0}).fold_all(1);
 
   uasat::Tensor symmetric =
-      relation.logic_leq(relation.polymer({size, size}, {1, 0})).fold_all();
-
-  /*
-    uasat::Tensor transitive;
-    if (false) {
-      transitive = relation.polymer({size, size, size}, {0, 1})
-                       .logic_and(relation.polymer({size, size, size}, {1, 2}))
-                       .fold_any({false, true, false})
-                       .logic_leq(relation)
-                       .fold_all();
-    } else {
-      transitive = relation.polymer({size, size, size}, {0, 1})
-                       .logic_and(relation.polymer({size, size, size}, {1, 2}))
-                       .logic_leq(relation.polymer({size, size, size}, {0, 2}))
-                       .fold_all();
-    }
-  */
+      relation.logic_leq(relation.polymer({size, size}, {1, 0})).fold_all(2);
 
   uasat::Tensor transitive =
       relation.polymer({size, size, size}, {0, 1})
           .logic_and(relation.polymer({size, size, size}, {1, 2}))
           .fold_any({false, true, false})
           .logic_leq(relation)
-          .fold_all();
+          .fold_all(2);
 
   uasat::Tensor equivalence =
       reflexive.logic_and(symmetric).logic_and(transitive);

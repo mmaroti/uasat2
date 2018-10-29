@@ -61,11 +61,10 @@ void Group::test_axioms() {
 
   solver->clear();
   elem1 = Tensor::variable(solver, get_shape());
-  solver->add_clause(
-      contains(elem1)
-          .logic_leq(product(identity(), elem1).logic_equ(elem1).fold_all())
-          .logic_not()
-          .get_scalar());
+  solver->add_clause(contains(elem1)
+                         .logic_leq(equals(product(identity(), elem1), elem1))
+                         .logic_not()
+                         .get_scalar());
   if (solver->solve()) {
     std::cout << "left identity axiom is not satisfied" << std::endl;
     std::cout << elem1.get_solution(solver) << std::endl;
@@ -75,8 +74,7 @@ void Group::test_axioms() {
   elem1 = Tensor::variable(solver, get_shape());
   solver->add_clause(
       contains(elem1)
-          .logic_leq(
-              product(inverse(elem1), elem1).logic_equ(identity()).fold_all())
+          .logic_leq(equals(product(inverse(elem1), elem1), identity()))
           .logic_not()
           .get_scalar());
   if (solver->solve()) {
@@ -92,9 +90,8 @@ void Group::test_axioms() {
       contains(elem1)
           .logic_and(contains(elem2))
           .logic_and(contains(elem3))
-          .logic_leq(product(product(elem1, elem2), elem3)
-                         .logic_equ(product(elem1, product(elem2, elem3)))
-                         .fold_all())
+          .logic_leq(equals(product(product(elem1, elem2), elem3),
+                            product(elem1, product(elem2, elem3))))
           .logic_not()
           .get_scalar());
   if (solver->solve()) {
@@ -115,8 +112,12 @@ std::vector<int> SymmetricGroup::get_shape() const { return {size, size}; }
 Tensor SymmetricGroup::contains(const Tensor &elem) {
   assert(elem.get_shape() == get_shape());
   return elem.fold_one({false, true})
-      .fold_all()
-      .logic_and(elem.fold_any({true, false}).fold_all());
+      .fold_all(1)
+      .logic_and(elem.fold_any({true, false}).fold_all(1));
+}
+
+Tensor SymmetricGroup::equals(const Tensor &elem1, const Tensor &elem2) {
+  return elem1.logic_equ(elem2).fold_all(2);
 }
 
 Tensor SymmetricGroup::identity() { return Tensor::diagonal(size); }
@@ -143,7 +144,7 @@ Tensor SymmetricGroup::even(const Tensor &perm) {
   Tensor rel2 = less.polymer({size, size, size}, {2, 0})
                     .logic_and(perm.polymer({size, size, size}, {1, 0}))
                     .fold_any({true, false, false});
-  return rel1.logic_and(rel2).fold_sum();
+  return rel1.logic_and(rel2).fold_sum(2);
 }
 
 } // namespace uasat

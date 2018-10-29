@@ -150,7 +150,7 @@ public:
    * Returns the slices of this tensor along the first axis. This is the inverse
    * of the stack operation.
    */
-  std::vector<Tensor> slices() const;
+  std::vector<Tensor> slices(int rank) const;
 
   /**
    * Combines a vector of tensors into a new tensor whose first dimension is
@@ -204,18 +204,10 @@ public:
   }
 
   /**
-   * Fold the given tensor along the selected axes using the logical and
-   * operation.
-   */
-  Tensor fold_all(const std::vector<bool> &selection) const {
-    return fold_bin(&Logic::fold_all, selection);
-  }
-
-  /**
    * Folds this tensor along all axes using the logical and operation and
    * returns a scalar tensor with the result.
    */
-  Tensor fold_all() const { return fold_bin(&Logic::fold_all); }
+  Tensor fold_all(int rank) const;
 
   /**
    * Fold the given tensor along the selected axes using the logical or
@@ -232,18 +224,10 @@ public:
   Tensor fold_any() const { return fold_bin(&Logic::fold_any); }
 
   /**
-   * Fold the given tensor along the selected axes using the binary addition
-   * operation.
-   */
-  Tensor fold_sum(const std::vector<bool> &selection) const {
-    return fold_bin(&Logic::fold_sum, selection);
-  }
-
-  /**
    * Folds this tensor along all axes using the binary addition operation and
    * returns a scalar tensor with the result.
    */
-  Tensor fold_sum() const { return fold_bin(&Logic::fold_sum); }
+  Tensor fold_sum(int rank) const;
 
   /**
    * Fold the given tensor along the selected axes using the exactly one is true

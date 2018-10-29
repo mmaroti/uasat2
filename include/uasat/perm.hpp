@@ -43,6 +43,11 @@ public:
   virtual Tensor contains(const Tensor &elem) = 0;
 
   /**
+   * Tests if the two tensors represent the same element.
+   */
+  virtual Tensor equals(const Tensor &elem1, const Tensor &elem2) = 0;
+
+  /**
    * Calculates the identity element of the group.
    */
   virtual Tensor identity() = 0;
@@ -73,6 +78,7 @@ public:
 
   std::vector<int> get_shape() const override;
   Tensor contains(const Tensor &elem) override;
+  Tensor equals(const Tensor &elem1, const Tensor &elem2) override;
   Tensor identity() override;
   Tensor inverse(const Tensor &perm) override;
   Tensor product(const Tensor &perm1, const Tensor &perm2) override;
