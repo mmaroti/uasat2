@@ -23,7 +23,7 @@
 #include <chrono>
 #include <iostream>
 
-#include "uasat/perm.hpp"
+#include "uasat/group.hpp"
 
 int main() {
   uasat::SymmetricGroup s(4);

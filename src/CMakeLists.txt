@@ -3,7 +3,7 @@ add_subdirectory(solvers)
 add_library(uasat SHARED
     solver.cpp
     tensor.cpp
-    perm.cpp)
+    group.cpp)
 
 target_include_directories(uasat PUBLIC ../include)
 target_link_libraries(uasat uasat-minisat)

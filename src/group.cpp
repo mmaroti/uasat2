@@ -24,7 +24,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "uasat/perm.hpp"
+#include "uasat/group.hpp"
 
 namespace uasat {
 

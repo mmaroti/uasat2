@@ -20,8 +20,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UASAT_CLASSES_HPP
-#define UASAT_CLASSES_HPP
+#ifndef UASAT_GROUP_HPP
+#define UASAT_GROUP_HPP
 
 #include <vector>
 
@@ -93,4 +93,4 @@ public:
 
 } // namespace uasat
 
-#endif // UASAT_CLASSES_HPP
+#endif // UASAT_GROUP_HPP
