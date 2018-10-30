@@ -28,6 +28,7 @@
 int main() {
   uasat::SymmetricGroup s(4);
   s.test_axioms();
+  std::cout << "cardinality: " << s.find_cardinality() << std::endl;
 
   return 0;
 }

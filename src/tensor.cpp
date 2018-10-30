@@ -342,6 +342,23 @@ Tensor Tensor::fold_sum(int rank) const {
   return data;
 }
 
+Tensor Tensor::fold_one(int rank) const {
+  std::vector<Tensor> tensors = slices(rank);
+  assert(tensors.size() > 0);
+
+  if (tensors.size() == 1)
+    return tensors[0];
+
+  Tensor min1 = tensors[0].logic_or(tensors[1]);
+  Tensor min2 = tensors[0].logic_and(tensors[1]);
+  for (size_t i = 2; i < tensors.size(); i++) {
+    min2 = min2.logic_or(min1.logic_and(tensors[i]));
+    min1 = min1.logic_or(tensors[i]);
+  }
+
+  return min1.logic_and(min2.logic_not());
+}
+
 literal_t Tensor::get_scalar() const {
   if (storage.size() != 1)
     throw std::invalid_argument("tensor must be scalar");

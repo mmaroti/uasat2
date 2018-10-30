@@ -204,8 +204,8 @@ public:
   }
 
   /**
-   * Folds this tensor along all axes using the logical and operation and
-   * returns a scalar tensor with the result.
+   * Folds this tensor along the first rank many axes using the logical
+   * and operation.
    */
   Tensor fold_all(int rank) const;
 
@@ -224,24 +224,16 @@ public:
   Tensor fold_any() const { return fold_bin(&Logic::fold_any); }
 
   /**
-   * Folds this tensor along all axes using the binary addition operation and
-   * returns a scalar tensor with the result.
+   * Folds this tensor along the first rank many axes using the binary
+   * addition operation.
    */
   Tensor fold_sum(int rank) const;
 
   /**
-   * Fold the given tensor along the selected axes using the exactly one is true
-   * operation.
+   * Folds this tensor along the first rank many axes and returns true
+   * if there is exactly one true value among the folded values.
    */
-  Tensor fold_one(const std::vector<bool> &selection) const {
-    return fold_bin(&Logic::fold_one, selection);
-  }
-
-  /**
-   * Folds this tensor along all axes using the exactly one is true operation
-   * and returns a scalar tensor with the result.
-   */
-  Tensor fold_one() const { return fold_bin(&Logic::fold_one); }
+  Tensor fold_one(int rank) const;
 
   /**
    * Returns the scalar value of a zero rank tensor.

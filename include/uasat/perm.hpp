@@ -67,6 +67,11 @@ public:
    * operations satisfy the group axioms.
    */
   void test_axioms();
+
+  /**
+   * Returns the cardinality of this set.
+   */
+  int find_cardinality();
 };
 
 class SymmetricGroup : public virtual Group {
