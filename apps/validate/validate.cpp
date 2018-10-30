@@ -77,9 +77,9 @@ int validate2(int size) {
       relation.logic_leq(relation.polymer({size, size}, {1, 0})).fold_all(2);
 
   uasat::Tensor transitive =
-      relation.polymer({size, size, size}, {0, 1})
-          .logic_and(relation.polymer({size, size, size}, {1, 2}))
-          .fold_any({false, true, false})
+      relation.polymer({size, size, size}, {1, 0})
+          .logic_and(relation.polymer({size, size, size}, {0, 2}))
+          .fold_any(1)
           .logic_leq(relation)
           .fold_all(2);
 

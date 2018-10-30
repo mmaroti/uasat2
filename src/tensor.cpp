@@ -279,47 +279,6 @@ Tensor Tensor::logic_bin(literal_t (Logic::*op)(literal_t, literal_t),
   return tensor3;
 }
 
-Tensor Tensor::fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &),
-                        const std::vector<bool> &selection) const {
-  if (selection.size() != shape.size())
-    throw std::invalid_argument("invalid fold selection");
-
-  std::vector<int> shape2;
-  View fold;
-  View scan;
-  size_t length = 1;
-
-  for (size_t i = 0; i < selection.size(); i++) {
-    if (selection[i])
-      fold.add(shape[i], length);
-    else {
-      scan.add(shape[i], length);
-      shape2.push_back(shape[i]);
-    }
-    length *= shape[i];
-  }
-
-  Tensor tensor2(logic, shape2);
-  assert(tensor2.storage.size() == scan.size);
-  std::vector<literal_t> literals(fold.size);
-
-  do {
-    do {
-      literals[fold.index] = storage[scan.offset + fold.offset];
-    } while (fold.next());
-    tensor2.storage[scan.index] = (logic.get()->*op)(literals);
-  } while (scan.next());
-
-  return tensor2;
-}
-
-Tensor
-Tensor::fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &)) const {
-  Tensor tensor(logic, {});
-  tensor.storage[0] = (logic.get()->*op)(storage);
-  return tensor;
-}
-
 Tensor Tensor::fold_all(int rank) const {
   std::vector<Tensor> tensors = slices(rank);
   assert(tensors.size() > 0);
@@ -327,6 +286,17 @@ Tensor Tensor::fold_all(int rank) const {
   Tensor data = tensors[0];
   for (size_t i = 1; i < tensors.size(); i++)
     data = data.logic_and(tensors[i]);
+
+  return data;
+}
+
+Tensor Tensor::fold_any(int rank) const {
+  std::vector<Tensor> tensors = slices(rank);
+  assert(tensors.size() > 0);
+
+  Tensor data = tensors[0];
+  for (size_t i = 1; i < tensors.size(); i++)
+    data = data.logic_or(tensors[i]);
 
   return data;
 }

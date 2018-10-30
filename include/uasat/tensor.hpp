@@ -59,18 +59,6 @@ protected:
                    const Tensor &tensor2) const;
 
   /**
-   * Performs the given generic fold operation on the given tensor,
-   * at the selected axes.
-   */
-  Tensor fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &),
-                  const std::vector<bool> &selection) const;
-
-  /**
-   * Performs the given generic fold operation on all axes.
-   */
-  Tensor fold_bin(literal_t (Logic::*op)(const std::vector<literal_t> &)) const;
-
-  /**
    * Returns the index of the element identified by the given coordinates.
    */
   size_t __very_slow_get_index(const std::vector<int> &coordinates) const;
@@ -210,18 +198,10 @@ public:
   Tensor fold_all(int rank) const;
 
   /**
-   * Fold the given tensor along the selected axes using the logical or
-   * operation.
+   * Folds this tensor along the first rank many axes using the binary
+   * or operation.
    */
-  Tensor fold_any(const std::vector<bool> &selection) const {
-    return fold_bin(&Logic::fold_any, selection);
-  }
-
-  /**
-   * Folds this tensor along all axes using the logical or operation and returns
-   * a scalar tensor with the result.
-   */
-  Tensor fold_any() const { return fold_bin(&Logic::fold_any); }
+  Tensor fold_any(int rank) const;
 
   /**
    * Folds this tensor along the first rank many axes using the binary

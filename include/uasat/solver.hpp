@@ -56,11 +56,6 @@ public:
     return logic_add(lit1, logic_not(lit2));
   }
 
-  virtual literal_t fold_all(const std::vector<literal_t> &lits);
-  virtual literal_t fold_any(const std::vector<literal_t> &lits);
-  virtual literal_t fold_sum(const std::vector<literal_t> &lits);
-  virtual literal_t fold_one(const std::vector<literal_t> &lits);
-
   virtual literal_t full_adder(literal_t lit1, literal_t lit2,
                                literal_t &carry);
 
@@ -101,9 +96,6 @@ public:
 
   literal_t logic_and(literal_t lit1, literal_t lit2) override;
   literal_t logic_add(literal_t lit1, literal_t lit2) override;
-
-  literal_t fold_all(const std::vector<literal_t> &lits) override;
-  literal_t fold_any(const std::vector<literal_t> &lits) override;
 };
 
 } // namespace uasat

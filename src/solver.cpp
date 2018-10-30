@@ -28,39 +28,6 @@
 
 namespace uasat {
 
-literal_t Logic::fold_all(const std::vector<literal_t> &lits) {
-  literal_t res = TRUE;
-  for (literal_t lit : lits)
-    res = logic_and(res, lit);
-  return res;
-}
-
-literal_t Logic::fold_any(const std::vector<literal_t> &lits) {
-  literal_t res = FALSE;
-  for (literal_t lit : lits)
-    res = logic_or(res, lit);
-  return res;
-}
-
-literal_t Logic::fold_sum(const std::vector<literal_t> &lits) {
-  literal_t res = TRUE;
-  for (literal_t lit : lits)
-    res = logic_add(res, lit);
-  return res;
-}
-
-literal_t Logic::fold_one(const std::vector<literal_t> &lits) {
-  literal_t min1 = FALSE;
-  literal_t min2 = FALSE;
-
-  for (literal_t lit : lits) {
-    min2 = logic_or(min2, logic_and(min1, lit));
-    min1 = logic_or(min1, lit);
-  }
-
-  return logic_and(min1, logic_not(min2));
-}
-
 literal_t Logic::full_adder(literal_t lit1, literal_t lit2, literal_t &carry) {
   literal_t s = logic_add(logic_add(lit1, lit2), carry);
   carry = logic_or(logic_and(lit1, lit2),
@@ -156,66 +123,6 @@ literal_t Solver::logic_add(literal_t lit1, literal_t lit2) {
   add_clause(lit1, logic_not(lit2), lit3);
   add_clause(logic_not(lit1), logic_not(lit2), logic_not(lit3));
   return lit3;
-}
-
-literal_t Solver::fold_all(const std::vector<literal_t> &lits) {
-  std::vector<literal_t> clause;
-  clause.reserve(lits.size() + 1);
-
-  for (const literal_t &lit : lits) {
-    if (lit == FALSE ||
-        std::find(clause.begin(), clause.end(), logic_not(lit)) != clause.end())
-      return FALSE;
-    else if (lit == TRUE ||
-             std::find(clause.begin(), clause.end(), lit) != clause.end())
-      continue;
-    else
-      clause.push_back(logic_not(lit));
-  }
-
-  if (clause.size() == 0)
-    return TRUE;
-  else if (clause.size() == 1)
-    return clause.front();
-
-  literal_t lit2 = add_variable(false, false);
-  for (const literal_t &lit : clause)
-    add_clause(logic_not(lit), logic_not(lit2));
-
-  clause.push_back(lit2);
-  add_clause(clause);
-
-  return lit2;
-}
-
-literal_t Solver::fold_any(const std::vector<literal_t> &lits) {
-  std::vector<literal_t> clause;
-  clause.reserve(lits.size() + 1);
-
-  for (const literal_t &lit : lits) {
-    if (lit == TRUE ||
-        std::find(clause.begin(), clause.end(), logic_not(lit)) != clause.end())
-      return TRUE;
-    else if (lit == FALSE ||
-             std::find(clause.begin(), clause.end(), lit) != clause.end())
-      continue;
-    else
-      clause.push_back(lit);
-  }
-
-  if (clause.size() == 0)
-    return FALSE;
-  else if (clause.size() == 1)
-    return clause.front();
-
-  literal_t lit2 = add_variable(false, false);
-  for (const literal_t &lit : clause)
-    add_clause(logic_not(lit), lit2);
-
-  clause.push_back(logic_not(lit2));
-  add_clause(clause);
-
-  return lit2;
 }
 
 } // namespace uasat
