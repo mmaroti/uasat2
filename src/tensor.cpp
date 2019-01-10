@@ -191,29 +191,32 @@ Tensor Tensor::polymer(const std::vector<int> &shape2,
   return tensor2;
 }
 
-Tensor Tensor::reshape(const std::vector<int> &shape2) const {
+Tensor Tensor::reshape(unsigned int rank, const std::vector<int> &dims) const {
+  if (rank < shape.size())
+    throw std::invalid_argument("invalid resize rank");
+
+  std::vector<int> shape2(shape.size() - rank + dims.size());
+  std::copy(dims.begin(), dims.end(), shape2.begin());
+  std::copy(shape.begin() + rank, shape.end(), shape2.begin() + dims.size());
+
   Tensor tensor2(logic, shape2);
   if (storage.size() != tensor2.storage.size())
-    throw std::invalid_argument("invalid number of elements");
+    throw std::invalid_argument("invalid resize dims");
 
   std::copy(storage.begin(), storage.end(), tensor2.storage.begin());
   return tensor2;
 }
 
-std::vector<Tensor> Tensor::slices(int rank) const {
-  if (rank <= 0)
-    throw std::invalid_argument("invalid rank argument");
-  if (shape.size() < (size_t)rank)
-    throw std::invalid_argument("tensor rank is small");
+std::vector<Tensor> Tensor::slices() const {
+  if (shape.size() < 1)
+    throw std::invalid_argument("not enough tenxor axes");
 
-  size_t size1 = 1;
-  for (int i = 0; i < rank; i++)
-    size1 *= shape[i];
+  size_t size1 = shape[0];
   size_t size2 = storage.size() / size1;
   assert(size1 * size2 == storage.size());
 
-  std::vector<int> shape2(shape.size() - rank);
-  std::copy(shape.begin() + rank, shape.end(), shape2.begin());
+  std::vector<int> shape2(shape.size() - 1);
+  std::copy(shape.begin() + 1, shape.end(), shape2.begin());
 
   std::vector<Tensor> slices;
   slices.reserve(size1);
@@ -279,8 +282,8 @@ Tensor Tensor::logic_bin(literal_t (Logic::*op)(literal_t, literal_t),
   return tensor3;
 }
 
-Tensor Tensor::fold_all(int rank) const {
-  std::vector<Tensor> tensors = slices(rank);
+Tensor Tensor::fold_all() const {
+  std::vector<Tensor> tensors = slices();
   assert(tensors.size() > 0);
 
   Tensor data = tensors[0];
@@ -290,8 +293,8 @@ Tensor Tensor::fold_all(int rank) const {
   return data;
 }
 
-Tensor Tensor::fold_any(int rank) const {
-  std::vector<Tensor> tensors = slices(rank);
+Tensor Tensor::fold_any() const {
+  std::vector<Tensor> tensors = slices();
   assert(tensors.size() > 0);
 
   Tensor data = tensors[0];
@@ -301,8 +304,8 @@ Tensor Tensor::fold_any(int rank) const {
   return data;
 }
 
-Tensor Tensor::fold_sum(int rank) const {
-  std::vector<Tensor> tensors = slices(rank);
+Tensor Tensor::fold_sum() const {
+  std::vector<Tensor> tensors = slices();
   assert(tensors.size() > 0);
 
   Tensor data = tensors[0];
@@ -312,8 +315,8 @@ Tensor Tensor::fold_sum(int rank) const {
   return data;
 }
 
-Tensor Tensor::fold_one(int rank) const {
-  std::vector<Tensor> tensors = slices(rank);
+Tensor Tensor::fold_one() const {
+  std::vector<Tensor> tensors = slices();
   assert(tensors.size() > 0);
 
   if (tensors.size() == 1)

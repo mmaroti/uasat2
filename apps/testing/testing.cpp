@@ -36,10 +36,10 @@ int main() {
 int main2() {
   uasat::Tensor a = uasat::Tensor::lessthan(4);
 
-  for (uasat::Tensor b : a.slices(1))
+  for (uasat::Tensor b : a.slices())
     std::cout << b << std::endl;
 
-  std::cout << uasat::Tensor::stack(a.slices(1)).logic_add(a) << std::endl;
+  std::cout << uasat::Tensor::stack(a.slices()).logic_add(a) << std::endl;
 
   return 0;
 }

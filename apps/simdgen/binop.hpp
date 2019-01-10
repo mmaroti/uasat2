@@ -44,11 +44,11 @@ struct InitOp {
     switch (type) {
     case MM_SET1_EPI8:
       assert(size % 8 == 0 && size2 == 8);
-      return init.polymer({size2, size / size2}, {0}).reshape({size});
+      return init.polymer({size2, size / size2}, {0}).reshape(2, {size});
 
     case MM_SET1_EPI2:
       assert(size % 2 == 0 && size2 == 2);
-      return init.polymer({size2, size / size2}, {0}).reshape({size});
+      return init.polymer({size2, size / size2}, {0}).reshape(2, {size});
 
     default:
       throw std::logic_error("unknown init operation");

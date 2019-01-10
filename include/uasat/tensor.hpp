@@ -128,17 +128,17 @@ public:
                  const std::vector<int> &mapping) const;
 
   /**
-   * Reshapes the tensor so that the number and linear indices of elements
-   * stays the same but only shape vector is changed. The new shape must
-   * define the same number of elements.
+   * Reshapes the first rank many axes of the tensor to dims so that the number
+   * and linear indices of elements stays the same but the shape vector is
+   * changed.
    */
-  Tensor reshape(const std::vector<int> &shape) const;
+  Tensor reshape(unsigned int rank, const std::vector<int> &dims) const;
 
   /**
    * Returns the slices of this tensor along the first axis. This is the inverse
    * of the stack operation.
    */
-  std::vector<Tensor> slices(int rank) const;
+  std::vector<Tensor> slices() const;
 
   /**
    * Combines a vector of tensors into a new tensor whose first dimension is
@@ -192,28 +192,25 @@ public:
   }
 
   /**
-   * Folds this tensor along the first rank many axes using the logical
-   * and operation.
+   * Folds this tensor along the first axis using the logical and operation.
    */
-  Tensor fold_all(int rank) const;
+  Tensor fold_all() const;
 
   /**
-   * Folds this tensor along the first rank many axes using the binary
-   * or operation.
+   * Folds this tensor along the first axis using the binary or operation.
    */
-  Tensor fold_any(int rank) const;
+  Tensor fold_any() const;
 
   /**
-   * Folds this tensor along the first rank many axes using the binary
-   * addition operation.
+   * Folds this tensor along the first axis using the binary addition operation.
    */
-  Tensor fold_sum(int rank) const;
+  Tensor fold_sum() const;
 
   /**
-   * Folds this tensor along the first rank many axes and returns true
-   * if there is exactly one true value among the folded values.
+   * Folds this tensor along the first axis and returns true if there is exactly
+   * one true value among the folded values.
    */
-  Tensor fold_one(int rank) const;
+  Tensor fold_one() const;
 
   /**
    * Returns the scalar value of a zero rank tensor.
