@@ -3,6 +3,7 @@ add_subdirectory(solvers)
 add_library(uasat SHARED
     solver.cpp
     tensor.cpp
+    set.cpp
     group.cpp)
 
 target_include_directories(uasat PUBLIC ../include)

@@ -20,57 +20,53 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UASAT_GROUP_HPP
-#define UASAT_GROUP_HPP
+#ifndef UASAT_SET_HPP
+#define UASAT_SET_HPP
 
-#include "set.hpp"
 #include "tensor.hpp"
 #include <vector>
 
 namespace uasat {
 
-class Group : public Set {
-public:
-  /**
-   * Initializes the shape of the elements of this group.
-   */
-  Group(const std::vector<int> &shape) : Set(shape) {}
-
-  /**
-   * Calculates the identity element of the group.
-   */
-  virtual Tensor identity() = 0;
-
-  /**
-   * Calculates the inverse of the given element.
-   */
-  virtual Tensor inverse(const Tensor &elem) = 0;
-
-  /**
-   * Calculates the product of the given pair of elements.
-   */
-  virtual Tensor product(const Tensor &elem1, const Tensor &elem2) = 0;
-
-  /**
-   * Tests that the underlying set is closed under the operations and the
-   * operations satisfy the group axioms.
-   */
-  void test_axioms();
-};
-
-class SymmetricGroup : public Group {
+class Set {
 protected:
-  int size;
+  std::vector<int> shape;
+  int tensor_size;
 
 public:
-  SymmetricGroup(int size);
+  /**
+   * Initializes the shape of the elements of this set.
+   */
+  Set(const std::vector<int> &shape);
 
-  Tensor contains(const Tensor &elem) override;
-  Tensor identity() override;
-  Tensor inverse(const Tensor &perm) override;
-  Tensor product(const Tensor &perm1, const Tensor &perm2) override;
+  /**
+   * The elements of the set are tensors of this shape.
+   */
+  const std::vector<int> &get_shape() const { return shape; };
 
-  Tensor even(const Tensor &perm);
+  /**
+   * Calculates the membership relation, that is whether the given tensor
+   * is a member of this set.
+   */
+  virtual Tensor contains(const Tensor &elem) = 0;
+
+  /**
+   * Tests if the two tensors represent the same element. Note, that is
+   * the equality operation on the tensors since otherwise it is hard to
+   * list all elements (exclude elements already found).
+   */
+  Tensor equals(const Tensor &elem1, const Tensor &elem2);
+
+  /**
+   * Calculates all elements of this set and puts them into a single tensor
+   * whose first axis is the element index.
+   */
+  Tensor find_elements();
+
+  /**
+   * Returns the cardinality of this set.
+   */
+  int find_cardinality();
 };
 
 } // namespace uasat

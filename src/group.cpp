@@ -101,29 +101,10 @@ void Group::test_axioms() {
   }
 }
 
-int Group::find_cardinality() {
-  std::shared_ptr<Solver> solver = Solver::create();
-  Tensor elem = Tensor::variable(solver, get_shape());
-  solver->add_clause(contains(elem).get_scalar());
-
-  int card = 0;
-  while (solver->solve()) {
-    card += 1;
-
-    std::vector<uasat::literal_t> clause;
-    elem.logic_add(elem.get_solution(solver)).extend_clause(clause);
-    solver->add_clause(clause);
-  }
-
-  return card;
-}
-
-SymmetricGroup::SymmetricGroup(int size) : size(size) {
+SymmetricGroup::SymmetricGroup(int size) : Group({size, size}), size(size) {
   if (size <= 0)
     throw std::invalid_argument("size must be positive");
 }
-
-std::vector<int> SymmetricGroup::get_shape() const { return {size, size}; }
 
 Tensor SymmetricGroup::contains(const Tensor &elem) {
   assert(elem.get_shape() == get_shape());
@@ -131,15 +112,11 @@ Tensor SymmetricGroup::contains(const Tensor &elem) {
       inverse(elem).fold_any().fold_all());
 }
 
-Tensor SymmetricGroup::equals(const Tensor &elem1, const Tensor &elem2) {
-  return elem1.logic_equ(elem2).reshape(2, {size * size}).fold_all();
-}
-
 Tensor SymmetricGroup::identity() { return Tensor::diagonal(size); }
 
 Tensor SymmetricGroup::inverse(const Tensor &perm) {
   assert(perm.get_shape() == get_shape());
-  return perm.polymer({size, size}, {1, 0});
+  return perm.polymer(shape, {1, 0});
 }
 
 Tensor SymmetricGroup::product(const Tensor &perm1, const Tensor &perm2) {
