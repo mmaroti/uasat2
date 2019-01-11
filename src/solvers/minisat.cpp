@@ -20,12 +20,11 @@
  * IN THE SOFTWARE.
  */
 
-#include <cassert>
-#include <stdexcept>
-
 #include "minisat.hpp"
 #include "minisat/core/Solver.h"
 #include "minisat/simp/SimpSolver.h"
+#include <cassert>
+#include <stdexcept>
 
 namespace uasat {
 

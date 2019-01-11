@@ -20,11 +20,10 @@
  * IN THE SOFTWARE.
  */
 
+#include "uasat/group.hpp"
 #include <cassert>
 #include <iostream>
 #include <stdexcept>
-
-#include "uasat/group.hpp"
 
 namespace uasat {
 

@@ -23,9 +23,8 @@
 #ifndef UASAT_TENSOR_HPP
 #define UASAT_TENSOR_HPP
 
-#include <ostream>
-
 #include "solver.hpp"
+#include <ostream>
 
 namespace uasat {
 

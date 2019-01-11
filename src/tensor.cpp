@@ -20,11 +20,10 @@
  * IN THE SOFTWARE.
  */
 
+#include "uasat/tensor.hpp"
 #include <cassert>
 #include <limits>
 #include <stdexcept>
-
-#include "uasat/tensor.hpp"
 
 namespace uasat {
 

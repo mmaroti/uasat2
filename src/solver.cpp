@@ -20,11 +20,10 @@
  * IN THE SOFTWARE.
  */
 
+#include "uasat/solver.hpp"
+#include "solvers/minisat.hpp"
 #include <algorithm>
 #include <cassert>
-
-#include "solvers/minisat.hpp"
-#include "uasat/solver.hpp"
 
 namespace uasat {
 

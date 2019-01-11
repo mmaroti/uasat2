@@ -23,10 +23,9 @@
 #ifndef UASAT_MINISAT_HPP
 #define UASAT_MINISAT_HPP
 
+#include "uasat/solver.hpp"
 #include <memory>
 #include <stdexcept>
-
-#include "uasat/solver.hpp"
 
 namespace Minisat {
 class Solver;
