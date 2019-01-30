@@ -27,7 +27,7 @@
 
 namespace uasat {
 
-void Group::test_axioms() {
+void AbstractGroup::test_axioms() {
   if (contains(identity()).get_scalar() != Logic::TRUE) {
     std::cout << "does not contain the identity elem";
     std::cout << identity() << std::endl;
@@ -101,7 +101,8 @@ void Group::test_axioms() {
   }
 }
 
-SymmetricGroup::SymmetricGroup(int size) : Group({size, size}), size(size) {
+SymmetricGroup::SymmetricGroup(int size)
+    : AbstractGroup({size, size}), size(size) {
   if (size <= 0)
     throw std::invalid_argument("size must be positive");
 }

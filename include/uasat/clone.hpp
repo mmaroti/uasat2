@@ -29,48 +29,36 @@
 
 namespace uasat {
 
-class AbstractGroup : public AbstractSet {
+class AbstractClone : public GradedSet {
 public:
   /**
-   * Initializes the shape of the elements of this group.
+   * Returns the projection element.
    */
-  AbstractGroup(const std::vector<int> &shape) : AbstractSet(shape) {}
+  virtual Tensor projection(int arity, int index) = 0;
 
   /**
-   * Calculates the identity element of the group.
+   * Calculates the composition of a function and tuple of elements. The
+   * dimension of the first axes must match arity1. The result will have arity2.
    */
-  virtual Tensor identity() = 0;
+  virtual Tensor compose(int arity1, const Tensor &func, int arity2,
+                         const Tensor &args) = 0;
 
   /**
-   * Calculates the inverse of the given element.
+   * Composition of a unary function and a single argument.
    */
-  virtual Tensor inverse(const Tensor &elem) = 0;
+  Tensor compose(const Tensor &func, int arity2, const Tensor &arg0);
 
   /**
-   * Calculates the product of the given pair of elements.
+   * Composition of a binary function and a pair of arguments.
    */
-  virtual Tensor product(const Tensor &elem1, const Tensor &elem2) = 0;
+  Tensor compose(const Tensor &func, int arity2, const Tensor &arg0,
+                 const Tensor &arg1);
 
   /**
-   * Tests that the underlying set is closed under the operations and the
-   * operations satisfy the group axioms.
+   * Composition of a ternary function and three arguments.
    */
-  void test_axioms();
-};
-
-class SymmetricGroup : public AbstractGroup {
-protected:
-  int size;
-
-public:
-  SymmetricGroup(int size);
-
-  Tensor contains(const Tensor &elem) override;
-  Tensor identity() override;
-  Tensor inverse(const Tensor &perm) override;
-  Tensor product(const Tensor &perm1, const Tensor &perm2) override;
-
-  Tensor even(const Tensor &perm);
+  Tensor compose(const Tensor &func, int arity2, const Tensor &arg0,
+                 const Tensor &arg1, const Tensor &arg2);
 };
 
 } // namespace uasat

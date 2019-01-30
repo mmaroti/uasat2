@@ -28,16 +28,15 @@
 
 namespace uasat {
 
-class Set {
+class AbstractSet {
 protected:
-  std::vector<int> shape;
-  int tensor_size;
+  std::vector<int> shape; // shape of a single element
 
 public:
   /**
    * Initializes the shape of the elements of this set.
    */
-  Set(const std::vector<int> &shape);
+  AbstractSet(const std::vector<int> &shape);
 
   /**
    * The elements of the set are tensors of this shape.
@@ -51,9 +50,9 @@ public:
   virtual Tensor contains(const Tensor &elem) = 0;
 
   /**
-   * Tests if the two tensors represent the same element. Note, that is
-   * the equality operation on the tensors since otherwise it is hard to
-   * list all elements (exclude elements already found).
+   * Tests if the two tensors represent the same element. Note, that this is the
+   * equality operation on the tensors since otherwise it is hard to list all
+   * elements (exclude elements already found).
    */
   Tensor equals(const Tensor &elem1, const Tensor &elem2);
 
@@ -67,6 +66,39 @@ public:
    * Returns the cardinality of this set.
    */
   int find_cardinality();
+};
+
+class GradedSet {
+public:
+  /**
+   * The elements of the graded set are tensors of this shape at the given
+   * grade.
+   */
+  virtual std::vector<int> &get_shape(int grade) const = 0;
+
+  /**
+   * Calculates the membership relation for the given grade, that is whether the
+   * given tensor is a member of this graded set.
+   */
+  virtual Tensor contains(int grade, const Tensor &elem) = 0;
+
+  /**
+   * Tests if the two tensors represent the same graded element. Note, that this
+   * is the equality operation on the tensors since otherwise it is hard to list
+   * all elements (exclude elements already found).
+   */
+  Tensor equals(int grade, const Tensor &elem1, const Tensor &elem2);
+
+  /**
+   * Calculates all elements of this graded set and puts them into a single
+   * tensor whose first axis is the element index.
+   */
+  Tensor find_elements(int grade);
+
+  /**
+   * Returns the cardinality of this graded set at the given grade.
+   */
+  int find_cardinality(int grade);
 };
 
 } // namespace uasat

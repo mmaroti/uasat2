@@ -26,18 +26,19 @@
 
 namespace uasat {
 
-Set::Set(const std::vector<int> &shape) : shape(shape) {
-  tensor_size = 1;
+AbstractSet::AbstractSet(const std::vector<int> &shape) : shape(shape) {}
 
-  for (int dimension : shape)
-    tensor_size *= dimension;
+Tensor AbstractSet::equals(const Tensor &elem1, const Tensor &elem2) {
+  Tensor result = elem1.logic_equ(elem2);
+
+  std::size_t size = get_shape().size();
+  for (std::size_t i = 0; i < size; i++)
+    result = result.fold_all();
+
+  return result;
 }
 
-Tensor Set::equals(const Tensor &elem1, const Tensor &elem2) {
-  return elem1.logic_equ(elem2).reshape(shape.size(), {tensor_size}).fold_all();
-}
-
-Tensor Set::find_elements() {
+Tensor AbstractSet::find_elements() {
   std::shared_ptr<Solver> solver = Solver::create();
   Tensor elem = Tensor::variable(solver, get_shape());
   solver->add_clause(contains(elem).get_scalar());
@@ -55,21 +56,38 @@ Tensor Set::find_elements() {
   return Tensor::stack(elems);
 }
 
-int Set::find_cardinality() {
-  std::shared_ptr<Solver> solver = Solver::create();
-  Tensor elem = Tensor::variable(solver, get_shape());
-  solver->add_clause(contains(elem).get_scalar());
+int AbstractSet::find_cardinality() { return find_elements().get_shape()[0]; }
 
-  int card = 0;
+Tensor GradedSet::equals(int grade, const Tensor &elem1, const Tensor &elem2) {
+  Tensor result = elem1.logic_equ(elem2);
+
+  std::size_t size = get_shape(grade).size();
+  for (std::size_t i = 0; i < size; i++)
+    result = result.fold_all();
+
+  return result;
+}
+
+Tensor GradedSet::find_elements(int grade) {
+  std::shared_ptr<Solver> solver = Solver::create();
+  Tensor elem = Tensor::variable(solver, get_shape(grade));
+  solver->add_clause(contains(grade, elem).get_scalar());
+
+  std::vector<Tensor> elems;
   while (solver->solve()) {
-    card += 1;
+    Tensor t = elem.get_solution(solver);
+    elems.push_back(t);
 
     std::vector<uasat::literal_t> clause;
-    elem.logic_add(elem.get_solution(solver)).extend_clause(clause);
+    elem.logic_add(t).extend_clause(clause);
     solver->add_clause(clause);
   }
 
-  return card;
+  return Tensor::stack(elems);
+}
+
+int GradedSet::find_cardinality(int grade) {
+  return find_elements(grade).get_shape()[0];
 }
 
 } // namespace uasat

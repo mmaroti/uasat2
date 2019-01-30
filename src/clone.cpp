@@ -20,59 +20,26 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UASAT_GROUP_HPP
-#define UASAT_GROUP_HPP
-
-#include "set.hpp"
-#include "tensor.hpp"
-#include <vector>
+#include "uasat/clone.hpp"
+#include <cassert>
+#include <stdexcept>
 
 namespace uasat {
 
-class AbstractGroup : public AbstractSet {
-public:
-  /**
-   * Initializes the shape of the elements of this group.
-   */
-  AbstractGroup(const std::vector<int> &shape) : AbstractSet(shape) {}
+Tensor AbstractClone::compose(const Tensor &func, int arity2,
+                              const Tensor &arg0) {
+  return compose(1, func, arity2, Tensor::stack({arg0}));
+}
 
-  /**
-   * Calculates the identity element of the group.
-   */
-  virtual Tensor identity() = 0;
+Tensor AbstractClone::compose(const Tensor &func, int arity2,
+                              const Tensor &arg0, const Tensor &arg1) {
+  return compose(2, func, arity2, Tensor::stack({arg0, arg1}));
+}
 
-  /**
-   * Calculates the inverse of the given element.
-   */
-  virtual Tensor inverse(const Tensor &elem) = 0;
-
-  /**
-   * Calculates the product of the given pair of elements.
-   */
-  virtual Tensor product(const Tensor &elem1, const Tensor &elem2) = 0;
-
-  /**
-   * Tests that the underlying set is closed under the operations and the
-   * operations satisfy the group axioms.
-   */
-  void test_axioms();
-};
-
-class SymmetricGroup : public AbstractGroup {
-protected:
-  int size;
-
-public:
-  SymmetricGroup(int size);
-
-  Tensor contains(const Tensor &elem) override;
-  Tensor identity() override;
-  Tensor inverse(const Tensor &perm) override;
-  Tensor product(const Tensor &perm1, const Tensor &perm2) override;
-
-  Tensor even(const Tensor &perm);
-};
+Tensor AbstractClone::compose(const Tensor &func, int arity2,
+                              const Tensor &arg0, const Tensor &arg1,
+                              const Tensor &arg2) {
+  return compose(3, func, arity2, Tensor::stack({arg0, arg1, arg2}));
+}
 
 } // namespace uasat
-
-#endif // UASAT_GROUP_HPP

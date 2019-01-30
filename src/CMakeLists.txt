@@ -4,7 +4,8 @@ add_library(uasat SHARED
     solver.cpp
     tensor.cpp
     set.cpp
-    group.cpp)
+    group.cpp
+    clone.cpp)
 
 target_include_directories(uasat PUBLIC ../include)
 target_link_libraries(uasat uasat-minisat)

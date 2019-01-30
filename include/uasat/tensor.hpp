@@ -72,7 +72,7 @@ public:
   /**
    * Returns the shape of this tensor.
    */
-  std::vector<int> get_shape() const { return shape; }
+  const std::vector<int> &get_shape() const { return shape; }
 
   /**
    * Returns the underlying logic object.
