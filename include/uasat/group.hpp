@@ -63,6 +63,10 @@ protected:
   int size;
 
 public:
+  /**
+   * Creates the symmetric group of permutations on the given set. Each element
+   * is represented as a permutation matrix.
+   */
   SymmetricGroup(int size);
 
   Tensor contains(const Tensor &elem) override;

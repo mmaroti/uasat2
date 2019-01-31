@@ -74,7 +74,7 @@ public:
    * The elements of the graded set are tensors of this shape at the given
    * grade.
    */
-  virtual std::vector<int> &get_shape(int grade) const = 0;
+  virtual std::vector<int> get_shape(int grade) const = 0;
 
   /**
    * Calculates the membership relation for the given grade, that is whether the

@@ -1,5 +1,7 @@
 add_subdirectory(solvers)
 
+add_compile_options(-pedantic -Wsuggest-override)
+
 add_library(uasat SHARED
     solver.cpp
     tensor.cpp

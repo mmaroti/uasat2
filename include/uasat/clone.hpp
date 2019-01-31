@@ -29,10 +29,11 @@
 
 namespace uasat {
 
-class AbstractClone : public GradedSet {
+class OperationalClone : public GradedSet {
 public:
   /**
-   * Returns the projection element.
+   * Returns the projection element. The arity must be positive and the index be
+   * in the interval [0, arity-1].
    */
   virtual Tensor projection(int arity, int index) = 0;
 
@@ -59,6 +60,24 @@ public:
    */
   Tensor compose(const Tensor &func, int arity2, const Tensor &arg0,
                  const Tensor &arg1, const Tensor &arg2);
+};
+
+class Operations : public OperationalClone {
+protected:
+  int size;
+
+public:
+  /**
+   * Creates a clone of operations on a finite set of the given size.
+   * The size must be positive.
+   */
+  Operations(int size);
+
+  std::vector<int> get_shape(int arity) const override;
+  Tensor contains(int arity, const Tensor &elem) override;
+  Tensor projection(int arity, int index) override;
+  Tensor compose(int arity1, const Tensor &func, int arity2,
+                 const Tensor &args) override;
 };
 
 } // namespace uasat
