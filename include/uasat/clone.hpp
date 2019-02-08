@@ -29,7 +29,7 @@
 
 namespace uasat {
 
-class OperationalClone : public GradedSet {
+class AbstractClone : public GradedSet {
 public:
   /**
    * Returns the projection element. The arity must be positive and the index be
@@ -62,7 +62,7 @@ public:
                  const Tensor &arg1, const Tensor &arg2);
 };
 
-class Operations : public OperationalClone {
+class Operations : public AbstractClone {
 protected:
   int size;
 

@@ -7,7 +7,8 @@ add_library(uasat SHARED
     tensor.cpp
     set.cpp
     group.cpp
-    clone.cpp)
+    clone.cpp
+    bitvec.cpp)
 
 target_include_directories(uasat PUBLIC ../include)
 target_link_libraries(uasat uasat-minisat)

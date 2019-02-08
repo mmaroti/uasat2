@@ -26,17 +26,17 @@
 
 namespace uasat {
 
-Tensor OperationalClone::compose(const Tensor &func, int arity2,
+Tensor AbstractClone::compose(const Tensor &func, int arity2,
                                  const Tensor &arg0) {
   return compose(1, func, arity2, Tensor::stack({arg0}));
 }
 
-Tensor OperationalClone::compose(const Tensor &func, int arity2,
+Tensor AbstractClone::compose(const Tensor &func, int arity2,
                                  const Tensor &arg0, const Tensor &arg1) {
   return compose(2, func, arity2, Tensor::stack({arg0, arg1}));
 }
 
-Tensor OperationalClone::compose(const Tensor &func, int arity2,
+Tensor AbstractClone::compose(const Tensor &func, int arity2,
                                  const Tensor &arg0, const Tensor &arg1,
                                  const Tensor &arg2) {
   return compose(3, func, arity2, Tensor::stack({arg0, arg1, arg2}));
