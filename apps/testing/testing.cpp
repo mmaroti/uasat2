@@ -23,23 +23,31 @@
 #include <chrono>
 #include <iostream>
 
+#include "uasat/bitvec.hpp"
 #include "uasat/group.hpp"
 
-int main() {
+void test_group() {
   uasat::SymmetricGroup s(4);
   s.test_axioms();
   std::cout << "cardinality: " << s.find_cardinality() << std::endl;
-
-  return 0;
 }
 
-int main2() {
+void test_logic() {
   uasat::Tensor a = uasat::Tensor::lessthan(4);
 
   for (uasat::Tensor b : a.slices())
     std::cout << b << std::endl;
 
   std::cout << uasat::Tensor::stack(a.slices()).logic_add(a) << std::endl;
+}
 
+void test_bitvec() {
+  uasat::BitVector v(5);
+  for (int i = 0; i < 32; i++)
+    std::cout << v.constant(i) << std::endl;
+}
+
+int main() {
+  test_bitvec();
   return 0;
 }

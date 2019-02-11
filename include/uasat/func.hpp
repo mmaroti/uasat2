@@ -20,30 +20,32 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UASAT_BITVEC_HPP
-#define UASAT_BITVEC_HPP
+#ifndef UASAT_FUNC_HPP
+#define UASAT_FUNC_HPP
 
-#include "set.hpp"
+#include "tensor.hpp"
 
 namespace uasat {
 
-class BitVector : public AbstractSet {
-protected:
-  int length;
+class Function {
+private:
+  AbstractSet *domain;
+  AbstractSet *codomain;
 
 public:
-  BitVector(int length);
+  Function(AbstractSet *domain, AbstractSet *codomain)
+      : domain(domain), codomain(codomain) {}
 
-  virtual Tensor contains(const Tensor &elem) override;
-  Tensor constant(unsigned long value);
+  AbstractSet *get_domain() const { return domain; }
+  AbstractSet *get_codomain() const { return codomain; }
 
-  Tensor meet(const Tensor &elem1, const Tensor &elem2);
-  Tensor join(const Tensor &elem1, const Tensor &elem2);
-  Tensor less(const Tensor &elem1, const Tensor &elem2);
+  virtual Tensor apply(const Tensor &tensor) = 0;
 
-  Tensor plus_one(const Tensor &elem, const Tensor &bit);
+  bool find_injective();
+  bool find_surjective();
+  bool find_bijective();
 };
 
 } // namespace uasat
 
-#endif // UASAT_BITVEC_HPP
+#endif // UASAT_FUNC_HPP

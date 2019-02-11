@@ -22,6 +22,7 @@
 
 #include "uasat/bitvec.hpp"
 #include <cassert>
+#include <limits>
 #include <stdexcept>
 
 namespace uasat {
@@ -39,6 +40,34 @@ Tensor BitVector::contains(const Tensor &elem) {
   std::copy(shape.begin() + 1, shape.end(), shape2.begin());
 
   return Tensor::constant(shape2, true);
+}
+
+Tensor BitVector::constant(unsigned long value) {
+  assert(value <= std::numeric_limits<unsigned long>::max());
+  assert((value >> length) == 0);
+
+  std::vector<Tensor> bits;
+  for (int i = 0; i < length; i++) {
+    bool b = ((value >> i) & 1) != 0;
+    bits.push_back(Tensor::constant({}, b));
+  }
+
+  return Tensor::stack(bits);
+}
+
+Tensor BitVector::plus_one(const Tensor &elem, const Tensor &bit) {
+  std::vector<Tensor> bits = elem.slices();
+  assert(bits.size() > 0);
+
+  std::vector<Tensor> result;
+
+  Tensor carry = bit;
+  for (size_t i = 0; i < bits.size(); i++) {
+    result.push_back(bits[i].logic_add(carry));
+    carry = bits[i].logic_and(carry);
+  }
+
+  return Tensor::stack(result);
 }
 
 } // namespace uasat
