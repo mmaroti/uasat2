@@ -35,13 +35,35 @@ public:
   BitVector(int length);
 
   virtual Tensor contains(const Tensor &elem) override;
-  Tensor constant(unsigned long value);
+  Tensor constant(const std::vector<int> &shape, unsigned long value);
 
+  /**
+   * Returns the intersection of the two bit vectors, which is their bitwise
+   * logical and.
+   */
   Tensor meet(const Tensor &elem1, const Tensor &elem2);
+
+  /**
+   * Returns the union of the two bit vectors, which is their bitwise logical
+   * or.
+   */
   Tensor join(const Tensor &elem1, const Tensor &elem2);
+
+  /**
+   * Returns true if the first bit vector is a subset of the second one.
+   */
   Tensor less(const Tensor &elem1, const Tensor &elem2);
 
+  /**
+   * Returns the binary number that is the sum of the binary number elem and
+   * bit.
+   */
   Tensor plus_one(const Tensor &elem, const Tensor &bit);
+
+  /**
+   * Returns the number of bits set to one in the element.
+   */
+  Tensor weight(const Tensor &elem);
 };
 
 } // namespace uasat

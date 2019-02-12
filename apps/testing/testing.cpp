@@ -43,8 +43,15 @@ void test_logic() {
 
 void test_bitvec() {
   uasat::BitVector v(5);
-  for (int i = 0; i < 32; i++)
-    std::cout << v.constant(i) << std::endl;
+
+  if (false) {
+    for (int i = 0; i < 32; i++)
+      std::cout << v.constant({}, i) << std::endl;
+  }
+
+  std::cout << v.plus_one(v.constant({}, 5), uasat::Tensor::constant({}, true))
+            << std::endl;
+  std::cout << v.weight(v.constant({}, 7)) << std::endl;
 }
 
 int main() {
