@@ -29,21 +29,20 @@ namespace uasat {
 
 class Function {
 private:
-  AbstractSet *domain;
-  AbstractSet *codomain;
+  std::vector<int> domain;
+  std::vector<int> codomain;
 
 public:
-  Function(AbstractSet *domain, AbstractSet *codomain)
+  Function(const std::vector<int> &domain, const std::vector<int> &codomain)
       : domain(domain), codomain(codomain) {}
 
-  AbstractSet *get_domain() const { return domain; }
-  AbstractSet *get_codomain() const { return codomain; }
+  const std::vector<int> &get_domain() const { return domain; }
+  const std::vector<int> &get_codomain() const { return codomain; }
+
+  bool check_domain(const Tensor &tensor);
+  bool check_codomain(const Tensor &tensor);
 
   virtual Tensor apply(const Tensor &tensor) = 0;
-
-  bool find_injective();
-  bool find_surjective();
-  bool find_bijective();
 };
 
 } // namespace uasat
