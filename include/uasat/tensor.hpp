@@ -58,15 +58,15 @@ protected:
                    const Tensor &tensor2) const;
 
   /**
+   * Performs the given generic ternary logic operation on the given tensors.
+   */
+  Tensor logic_ter(literal_t (Logic::*op)(literal_t, literal_t, literal_t),
+                   const Tensor &tensor2, const Tensor &tensor3) const;
+
+  /**
    * Returns the index of the element identified by the given coordinates.
    */
   size_t __very_slow_get_index(const std::vector<int> &coordinates) const;
-
-  /**
-   * Checks if the logics of the other tensor is compatible, that is they are
-   * either equals or one of them is the BOOLEAN one.
-   */
-  std::shared_ptr<Logic> join_logic(const Tensor &tensor) const;
 
 public:
   /**
@@ -95,8 +95,8 @@ public:
   }
 
   /**
-   * Creates a new tensor with the given shape with fresh variables from
-   * the selected solver.
+   * Creates a new tensor with the given shape with fresh variables from the
+   * selected solver.
    */
   static Tensor variable(const std::shared_ptr<Solver> &solver,
                          const std::vector<int> &shape, bool decision = true,
@@ -119,9 +119,9 @@ public:
 
   /**
    * Creates a new tensor of the given shape from the given old tensor with
-   * permuted, identified or new dummy coordinates. The mapping is a vector
-   * of length of the old tensor shape with entries identifying the coordinate
-   * in the new tensor.
+   * permuted, identified or new dummy coordinates. The mapping is a vector of
+   * length of the old tensor shape with entries identifying the coordinate in
+   * the new tensor.
    */
   Tensor polymer(const std::vector<int> &shape,
                  const std::vector<int> &mapping) const;
@@ -140,8 +140,8 @@ public:
   std::vector<Tensor> slices() const;
 
   /**
-   * Combines a vector of tensors into a new tensor whose first dimension is
-   * the size of the vector. This is the inverse of the slices operation.
+   * Combines a vector of tensors into a new tensor whose first dimension is the
+   * size of the vector. This is the inverse of the slices operation.
    */
   static Tensor stack(const std::vector<Tensor> &slices);
 
@@ -151,43 +151,59 @@ public:
   Tensor logic_not() const;
 
   /**
-   * Creates a new tensor from the given pair of tensors whose entries are
-   * the logical and of the corresponding literals.
+   * Creates a new tensor from the given pair of tensors whose entries are the
+   * logical and of the corresponding literals.
    */
   Tensor logic_and(const Tensor &tensor2) const {
     return logic_bin(&Logic::logic_and, tensor2);
   }
 
   /**
-   * Creates a new tensor from the given pair of tensors whose entries are
-   * the logical or of the corresponding literals.
+   * Creates a new tensor from the given pair of tensors whose entries are the
+   * logical or of the corresponding literals.
    */
   Tensor logic_or(const Tensor &tensor2) const {
     return logic_bin(&Logic::logic_or, tensor2);
   }
 
   /**
-   * Creates a new tensor from the given pair of tensors whose entries are
-   * the implication of the corresponding literals.
+   * Creates a new tensor from the given pair of tensors whose entries are the
+   * implication of the corresponding literals.
    */
   Tensor logic_leq(const Tensor &tensor2) const {
     return logic_bin(&Logic::logic_leq, tensor2);
   }
 
   /**
-   * Creates a new tensor from the given pair of tensors whose entries are
-   * the logical sum of the corresponding literals.
+   * Creates a new tensor from the given pair of tensors whose entries are the
+   * logical sum of the corresponding literals.
    */
   Tensor logic_add(const Tensor &tensor2) const {
     return logic_bin(&Logic::logic_add, tensor2);
   }
 
   /**
-   * Creates a new tensor from the given pair of tensors whose entries are
-   * the logical xor of the corresponding literals.
+   * Creates a new tensor from the given pair of tensors whose entries are the
+   * logical xor of the corresponding literals.
    */
   Tensor logic_equ(const Tensor &tensor2) const {
     return logic_bin(&Logic::logic_equ, tensor2);
+  }
+
+  /**
+   * Returns a new tensor from the given three tensors whose entries are the
+   * logical majority of the corresponding literals.
+   */
+  Tensor logic_maj(const Tensor &tensor2, const Tensor &tensor3) const {
+    return logic_ter(&Logic::logic_maj, tensor2, tensor3);
+  }
+
+  /**
+   * Returns a new tensor from the given three tensors whose entries are the
+   * logical ternary iff of the corresponding literals.
+   */
+  Tensor logic_iff(const Tensor &tensor2, const Tensor &tensor3) const {
+    return logic_ter(&Logic::logic_iff, tensor2, tensor3);
   }
 
   /**
@@ -217,8 +233,8 @@ public:
   literal_t get_scalar() const;
 
   /**
-   * Returns the boolean tensor that contains the values of this
-   * tensor in the current solution.
+   * Returns the boolean tensor that contains the values of this tensor in the
+   * current solution.
    */
   Tensor get_solution(const std::shared_ptr<Solver> &solver) const;
 

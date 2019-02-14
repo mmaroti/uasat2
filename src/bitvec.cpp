@@ -59,6 +59,7 @@ Tensor BitVector::constant(const std::vector<int> &shape, unsigned long value) {
 Tensor BitVector::plus_one(const Tensor &elem, const Tensor &bit) {
   const std::vector<int> &shape = elem.get_shape();
   assert(shape.size() > 0 && shape[0] == length);
+  (void)shape;
 
   std::vector<Tensor> bits = elem.slices();
   assert(bits.size() > 0);

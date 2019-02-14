@@ -103,12 +103,12 @@ void AbstractGroup::test_axioms() {
 
 SymmetricGroup::SymmetricGroup(int size)
     : AbstractGroup({size, size}), size(size) {
-  if (size <= 0)
-    throw std::invalid_argument("size must be positive");
+  if (size < 0)
+    throw std::invalid_argument("size must be non-negative");
 }
 
 Tensor SymmetricGroup::contains(const Tensor &elem) {
-  assert(elem.get_shape() == get_shape());
+  assert(check_shape(elem.get_shape()));
   return elem.fold_one().fold_all().logic_and(
       inverse(elem).fold_any().fold_all());
 }
@@ -116,20 +116,19 @@ Tensor SymmetricGroup::contains(const Tensor &elem) {
 Tensor SymmetricGroup::identity() { return Tensor::diagonal(size); }
 
 Tensor SymmetricGroup::inverse(const Tensor &perm) {
-  assert(perm.get_shape() == get_shape());
+  assert(check_shape(perm.get_shape()));
   return perm.polymer(shape, {1, 0});
 }
 
 Tensor SymmetricGroup::product(const Tensor &perm1, const Tensor &perm2) {
-  assert(perm1.get_shape() == get_shape());
-  assert(perm2.get_shape() == get_shape());
+  assert(check_shape(perm1.get_shape()) && check_shape(perm2.get_shape()));
   return perm1.polymer({size, size, size}, {1, 0})
       .logic_and(perm2.polymer({size, size, size}, {0, 2}))
       .fold_any();
 }
 
 Tensor SymmetricGroup::even(const Tensor &perm) {
-  assert(perm.get_shape() == get_shape());
+  assert(check_shape(perm.get_shape()));
   Tensor less = Tensor::lessthan(size);
   Tensor rel1 = less.polymer({size, size, size}, {1, 0})
                     .logic_and(perm.polymer({size, size, size}, {0, 2}))
@@ -138,6 +137,71 @@ Tensor SymmetricGroup::even(const Tensor &perm) {
                     .logic_and(perm.polymer({size, size, size}, {1, 0}))
                     .fold_any();
   return rel1.logic_and(rel2).reshape(2, {size * size}).fold_sum();
+}
+
+BinaryNumAddition::BinaryNumAddition(int length)
+    : AbstractGroup({length}), length(length) {
+  if (length < 0)
+    throw std::invalid_argument("length must be non-negative");
+}
+
+Tensor BinaryNumAddition::contains(const Tensor &elem) {
+  assert(check_shape(elem.get_shape()));
+  (void)elem;
+  return Tensor::constant({}, true);
+}
+
+Tensor BinaryNumAddition::identity() {
+  return Tensor::constant(get_shape(), false);
+}
+
+Tensor BinaryNumAddition::inverse(const Tensor &elem) {
+  assert(check_shape(elem.get_shape()));
+  return increment(elem.logic_not(), Tensor::constant({}, true));
+}
+
+Tensor BinaryNumAddition::product(const Tensor &elem1, const Tensor &elem2) {
+  assert(check_shape(elem1.get_shape()) && check_shape(elem2.get_shape()));
+
+  std::vector<Tensor> bits1 = elem1.slices();
+  std::vector<Tensor> bits2 = elem2.slices();
+  std::vector<Tensor> result;
+
+  Tensor carry = Tensor::constant({}, false);
+  for (size_t i = 0; i < bits1.size(); i++) {
+    result.push_back(bits1[i].logic_add(bits2[i]).logic_add(carry));
+    if (i + 1 < bits1.size())
+      carry = bits1[i].logic_maj(bits2[i], carry);
+  }
+
+  return Tensor::stack(result);
+}
+
+Tensor BinaryNumAddition::increment(const Tensor &elem, const Tensor &flag) {
+  assert(check_shape(elem.get_shape()));
+
+  std::vector<Tensor> bits = elem.slices();
+  std::vector<Tensor> result;
+
+  Tensor carry = flag;
+  for (size_t i = 0; i < bits.size(); i++) {
+    result.push_back(bits[i].logic_add(carry));
+    if (i + 1 < bits.size())
+      carry = bits[i].logic_and(carry);
+  }
+
+  return Tensor::stack(result);
+}
+
+Tensor BinaryNumAddition::weight(const Tensor &elem) {
+  assert(check_shape(elem.get_shape()));
+
+  Tensor result = identity();
+  std::vector<Tensor> bits = elem.slices();
+  for (size_t i = 0; i < bits.size(); i++)
+    result = increment(result, bits[i]);
+
+  return result;
 }
 
 } // namespace uasat

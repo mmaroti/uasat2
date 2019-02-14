@@ -27,28 +27,22 @@
 
 namespace uasat {
 
-literal_t Logic::full_adder(literal_t lit1, literal_t lit2, literal_t &carry) {
-  literal_t s = logic_add(logic_add(lit1, lit2), carry);
-  carry = logic_or(logic_and(lit1, lit2),
-                   logic_or(logic_and(lit1, carry), logic_and(lit2, carry)));
-  return s;
+literal_t Logic::logic_add(literal_t lit1, literal_t lit2) {
+  return logic_or(logic_and(lit1, logic_not(lit2)),
+                  logic_and(logic_not(lit1), lit2));
 }
 
-std::vector<literal_t> Logic::binary_add(const std::vector<literal_t> &lits1,
-                                         const std::vector<literal_t> &lits2) {
-  assert(lits1.size() == lits2.size());
-  std::vector<literal_t> lits3;
-
-  literal_t carry = FALSE;
-  for (size_t i = 0; i < lits1.size(); i++) {
-    lits3[i] = full_adder(lits1[i], lits2[i], carry);
-  }
-
-  return lits3;
+literal_t Logic::logic_maj(literal_t lit1, literal_t lit2, literal_t lit3) {
+  return logic_or(logic_or(logic_and(lit1, lit2), logic_and(lit1, lit3)),
+                  logic_and(lit2, lit3));
 }
 
-std::shared_ptr<Logic> Logic::join(std::shared_ptr<Logic> logic1,
-                                   std::shared_ptr<Logic> logic2) {
+literal_t Logic::logic_iff(literal_t lit1, literal_t lit2, literal_t lit3) {
+  return logic_or(logic_and(lit1, lit2), logic_and(logic_not(lit1), lit3));
+}
+
+std::shared_ptr<Logic> Logic::join(const std::shared_ptr<Logic> &logic1,
+                                   const std::shared_ptr<Logic> &logic2) {
   if (logic1 != logic2 && logic1 != BOOLEAN && logic2 != BOOLEAN)
     throw std::invalid_argument("non-matching logics");
   return logic1 != BOOLEAN ? logic1 : logic2;
@@ -122,6 +116,42 @@ literal_t Solver::logic_add(literal_t lit1, literal_t lit2) {
   add_clause(lit1, logic_not(lit2), lit3);
   add_clause(logic_not(lit1), logic_not(lit2), logic_not(lit3));
   return lit3;
+}
+
+literal_t Solver::logic_maj(literal_t lit1, literal_t lit2, literal_t lit3) {
+  if (lit1 == FALSE)
+    return logic_and(lit2, lit3);
+  else if (lit1 == TRUE)
+    return logic_or(lit2, lit3);
+  else if (lit2 == FALSE)
+    return logic_and(lit1, lit3);
+  else if (lit2 == TRUE)
+    return logic_or(lit1, lit3);
+  else if (lit3 == FALSE)
+    return logic_and(lit1, lit2);
+  else if (lit3 == TRUE)
+    return logic_or(lit1, lit2);
+  else if (lit1 == lit2)
+    return lit1;
+  else if (lit1 == logic_not(lit2))
+    return lit3;
+  else if (lit1 == lit3)
+    return lit1;
+  else if (lit1 == logic_not(lit3))
+    return lit2;
+  else if (lit2 == lit3)
+    return lit2;
+  else if (lit2 == logic_not(lit3))
+    return lit1;
+
+  literal_t lit4 = add_variable(false, false);
+  add_clause(lit1, lit2, logic_not(lit4));
+  add_clause(lit1, lit3, logic_not(lit4));
+  add_clause(lit2, lit3, logic_not(lit4));
+  add_clause(logic_not(lit1), logic_not(lit2), lit4);
+  add_clause(logic_not(lit1), logic_not(lit3), lit4);
+  add_clause(logic_not(lit2), logic_not(lit3), lit4);
+  return lit4;
 }
 
 } // namespace uasat

@@ -27,9 +27,11 @@
 #include "uasat/group.hpp"
 
 void test_group() {
-  uasat::SymmetricGroup s(4);
-  s.test_axioms();
-  std::cout << "cardinality: " << s.find_cardinality() << std::endl;
+  // uasat::SymmetricGroup g(4);
+  uasat::BinaryNumAddition g(5);
+
+  g.test_axioms();
+  std::cout << "cardinality: " << g.find_cardinality() << std::endl;
 }
 
 void test_logic() {
@@ -55,6 +57,6 @@ void test_bitvec() {
 }
 
 int main() {
-  test_bitvec();
+  test_group();
   return 0;
 }

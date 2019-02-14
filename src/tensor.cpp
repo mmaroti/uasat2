@@ -93,12 +93,6 @@ Tensor::Tensor(const std::shared_ptr<Logic> &logic,
                const std::vector<int> &shape)
     : logic(logic), shape(shape), storage(get_storage_size(shape)) {}
 
-std::shared_ptr<Logic> Tensor::join_logic(const Tensor &tensor) const {
-  if (logic != tensor.logic && logic != BOOLEAN && tensor.logic != BOOLEAN)
-    throw std::invalid_argument("non-matching tensor logics");
-  return logic != BOOLEAN ? logic : tensor.logic;
-}
-
 size_t
 Tensor::__very_slow_get_index(const std::vector<int> &coordinates) const {
   if (coordinates.size() != shape.size())
@@ -271,7 +265,7 @@ Tensor Tensor::logic_bin(literal_t (Logic::*op)(literal_t, literal_t),
   if (shape != tensor2.shape)
     throw std::invalid_argument("non-matching shape");
 
-  std::shared_ptr<Logic> logic3 = join_logic(tensor2);
+  std::shared_ptr<Logic> logic3 = Logic::join(logic, tensor2.logic);
   Tensor tensor3(logic3, shape);
 
   for (size_t index = 0; index < tensor3.storage.size(); index++)
@@ -279,6 +273,23 @@ Tensor Tensor::logic_bin(literal_t (Logic::*op)(literal_t, literal_t),
         (logic3.get()->*op)(storage[index], tensor2.storage[index]);
 
   return tensor3;
+}
+
+Tensor Tensor::logic_ter(literal_t (Logic::*op)(literal_t, literal_t,
+                                                literal_t),
+                         const Tensor &tensor2, const Tensor &tensor3) const {
+  if (shape != tensor2.shape || shape != tensor3.shape)
+    throw std::invalid_argument("non-matching shape");
+
+  std::shared_ptr<Logic> logic4 =
+      Logic::join(Logic::join(logic, tensor2.logic), tensor3.logic);
+  Tensor tensor4(logic4, shape);
+
+  for (size_t index = 0; index < tensor4.storage.size(); index++)
+    tensor4.storage[index] = (logic4.get()->*op)(
+        storage[index], tensor2.storage[index], tensor3.storage[index]);
+
+  return tensor4;
 }
 
 Tensor Tensor::fold_all() const {

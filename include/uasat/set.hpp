@@ -44,6 +44,11 @@ public:
   const std::vector<int> &get_shape() const { return shape; };
 
   /**
+   * Verifies that shape2 is an extension of shape of the elements in this set.
+   */
+  bool check_shape(const std::vector<int> &shape2) const;
+
+  /**
    * Calculates the membership relation, that is whether the given tensor
    * is a member of this set.
    */

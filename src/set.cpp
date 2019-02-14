@@ -21,18 +21,28 @@
  */
 
 #include "uasat/set.hpp"
-#include <cassert>
 #include <stdexcept>
 
 namespace uasat {
 
 AbstractSet::AbstractSet(const std::vector<int> &shape) : shape(shape) {}
 
+bool AbstractSet::check_shape(const std::vector<int> &shape2) const {
+  if (shape2.size() < shape.size())
+    return false;
+
+  for (size_t i = 0; i < shape.size(); i++)
+    if (shape2[i] != shape[i])
+      return false;
+
+  return true;
+}
+
 Tensor AbstractSet::equals(const Tensor &elem1, const Tensor &elem2) {
   Tensor result = elem1.logic_equ(elem2);
 
-  std::size_t size = get_shape().size();
-  for (std::size_t i = 0; i < size; i++)
+  size_t size = get_shape().size();
+  for (size_t i = 0; i < size; i++)
     result = result.fold_all();
 
   return result;
@@ -61,8 +71,8 @@ int AbstractSet::find_cardinality() { return find_elements().get_shape()[0]; }
 Tensor GradedSet::equals(int grade, const Tensor &elem1, const Tensor &elem2) {
   Tensor result = elem1.logic_equ(elem2);
 
-  std::size_t size = get_shape(grade).size();
-  for (std::size_t i = 0; i < size; i++)
+  size_t size = get_shape(grade).size();
+  for (size_t i = 0; i < size; i++)
     result = result.fold_all();
 
   return result;

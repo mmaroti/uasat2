@@ -77,6 +77,22 @@ public:
   Tensor even(const Tensor &perm);
 };
 
+class BinaryNumAddition : public AbstractGroup {
+protected:
+  int length;
+
+public:
+  BinaryNumAddition(int length);
+
+  Tensor contains(const Tensor &elem) override;
+  Tensor identity() override;
+  Tensor inverse(const Tensor &elem) override;
+  Tensor product(const Tensor &elem1, const Tensor &elem2) override;
+
+  Tensor increment(const Tensor &elem, const Tensor &flag);
+  Tensor weight(const Tensor &elem);
+};
+
 } // namespace uasat
 
 #endif // UASAT_GROUP_HPP

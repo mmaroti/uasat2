@@ -41,8 +41,10 @@ public:
   virtual ~Logic() = default;
 
   literal_t logic_not(literal_t lit) { return -lit; }
+
   virtual literal_t logic_and(literal_t lit1, literal_t lit2) = 0;
-  virtual literal_t logic_add(literal_t lit1, literal_t lit2) = 0;
+
+  virtual literal_t logic_add(literal_t lit1, literal_t lit2);
 
   literal_t logic_or(literal_t lit1, literal_t lit2) {
     return logic_not(logic_and(logic_not(lit1), logic_not(lit2)));
@@ -56,19 +58,16 @@ public:
     return logic_add(lit1, logic_not(lit2));
   }
 
-  virtual literal_t full_adder(literal_t lit1, literal_t lit2,
-                               literal_t &carry);
+  virtual literal_t logic_maj(literal_t lit1, literal_t lit2, literal_t lit3);
 
-  virtual std::vector<literal_t>
-  binary_add(const std::vector<literal_t> &lits1,
-             const std::vector<literal_t> &lits2);
+  virtual literal_t logic_iff(literal_t lit1, literal_t lit2, literal_t lit3);
 
   /**
    * Checks if the two logics are compatible, that is they are
    * either equals or one of them is the BOOLEAN one.
    */
-  static std::shared_ptr<Logic> join(std::shared_ptr<Logic> logic1,
-                                     std::shared_ptr<Logic> logic2);
+  static std::shared_ptr<Logic> join(const std::shared_ptr<Logic> &logic1,
+                                     const std::shared_ptr<Logic> &logic2);
 };
 
 extern const std::shared_ptr<Logic> BOOLEAN;
@@ -96,6 +95,7 @@ public:
 
   literal_t logic_and(literal_t lit1, literal_t lit2) override;
   literal_t logic_add(literal_t lit1, literal_t lit2) override;
+  literal_t logic_maj(literal_t lit1, literal_t lit2, literal_t lit3) override;
 };
 
 } // namespace uasat
