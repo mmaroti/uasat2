@@ -21,73 +21,8 @@
  */
 
 #include "uasat/bitvec.hpp"
-#include <cassert>
 #include <iostream>
-#include <limits>
-#include <stdexcept>
 
 namespace uasat {
-
-BitVector::BitVector(int length) : AbstractSet({length}), length(length) {
-  if (length < 0)
-    throw std::invalid_argument("number of bits cannot be negative");
-}
-
-Tensor BitVector::contains(const Tensor &elem) {
-  const std::vector<int> &shape = elem.get_shape();
-  assert(shape.size() > 0 && shape[0] == length);
-
-  std::vector<int> shape2(shape.size() - 1, 0);
-  std::copy(shape.begin() + 1, shape.end(), shape2.begin());
-
-  return Tensor::constant(shape2, true);
-}
-
-Tensor BitVector::constant(const std::vector<int> &shape, unsigned long value) {
-  assert(value <= std::numeric_limits<unsigned long>::max());
-  assert((value >> length) == 0);
-
-  std::vector<Tensor> bits;
-  for (int i = 0; i < length; i++) {
-    bool b = ((value >> i) & 1) != 0;
-    bits.push_back(Tensor::constant(shape, b));
-  }
-
-  return Tensor::stack(bits);
-}
-
-Tensor BitVector::plus_one(const Tensor &elem, const Tensor &bit) {
-  const std::vector<int> &shape = elem.get_shape();
-  assert(shape.size() > 0 && shape[0] == length);
-  (void)shape;
-
-  std::vector<Tensor> bits = elem.slices();
-  assert(bits.size() > 0);
-
-  std::vector<Tensor> result;
-
-  Tensor carry = bit;
-  for (size_t i = 0; i < bits.size(); i++) {
-    result.push_back(bits[i].logic_add(carry));
-    carry = bits[i].logic_and(carry);
-  }
-
-  return Tensor::stack(result);
-}
-
-Tensor BitVector::weight(const Tensor &elem) {
-  const std::vector<int> &shape = elem.get_shape();
-  assert(shape.size() > 0 && shape[0] == length);
-
-  std::vector<int> shape2(shape.size() - 1, 0);
-  std::copy(shape.begin() + 1, shape.end(), shape2.begin());
-  Tensor result = constant(shape2, 0);
-
-  std::vector<Tensor> bits = elem.slices();
-  for (size_t i = 0; i < bits.size(); i++)
-    result = plus_one(result, bits[i]);
-
-  return result;
-}
 
 } // namespace uasat

@@ -177,6 +177,18 @@ Tensor BinaryNumAddition::product(const Tensor &elem1, const Tensor &elem2) {
   return Tensor::stack(result);
 }
 
+Tensor BinaryNumAddition::constant(unsigned long value) {
+  assert(length <= 64);
+
+  std::vector<Tensor> bits;
+  for (int i = 0; i < length; i++) {
+    bool b = ((value >> i) & 1) != 0;
+    bits.push_back(Tensor::constant({}, b));
+  }
+
+  return Tensor::stack(bits);
+}
+
 Tensor BinaryNumAddition::increment(const Tensor &elem, const Tensor &flag) {
   assert(check_shape(elem.get_shape()));
 

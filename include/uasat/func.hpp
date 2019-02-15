@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018, Miklos Maroti, University of Szeged
+ * Copyright (c) 2016-2019, Miklos Maroti, University of Szeged
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,22 +27,42 @@
 
 namespace uasat {
 
-class Function {
-private:
-  std::vector<int> domain;
+bool check_shape(const std::vector<int> &shape, const Tensor &elem);
+
+class NullaryFunc {
+protected:
   std::vector<int> codomain;
 
 public:
-  Function(const std::vector<int> &domain, const std::vector<int> &codomain)
+  NullaryFunc(const std::vector<int> &codomain) : codomain(codomain) {}
+
+  virtual Tensor apply() const = 0;
+};
+
+class UnaryFunc {
+protected:
+  const std::vector<int> domain;
+  const std::vector<int> codomain;
+
+public:
+  UnaryFunc(const std::vector<int> &domain, const std::vector<int> &codomain)
       : domain(domain), codomain(codomain) {}
 
-  const std::vector<int> &get_domain() const { return domain; }
-  const std::vector<int> &get_codomain() const { return codomain; }
+  virtual Tensor apply(const Tensor &elem) const = 0;
+};
 
-  bool check_domain(const Tensor &tensor);
-  bool check_codomain(const Tensor &tensor);
+class BinaryFunc {
+protected:
+  const std::vector<int> domain1;
+  const std::vector<int> domain2;
+  const std::vector<int> codomain;
 
-  virtual Tensor apply(const Tensor &tensor) = 0;
+public:
+  BinaryFunc(const std::vector<int> &domain1, const std::vector<int> &domain2,
+             const std::vector<int> &codomain)
+      : domain1(domain1), domain2(domain2), codomain(codomain) {}
+
+  virtual Tensor apply(const Tensor &elem) const = 0;
 };
 
 } // namespace uasat

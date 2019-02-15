@@ -8,7 +8,8 @@ add_library(uasat SHARED
     set.cpp
     group.cpp
     clone.cpp
-    bitvec.cpp)
+    bitvec.cpp
+    func.cpp)
 
 target_include_directories(uasat PUBLIC ../include)
 target_link_libraries(uasat uasat-minisat)

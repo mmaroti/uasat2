@@ -23,47 +23,65 @@
 #ifndef UASAT_BITVEC_HPP
 #define UASAT_BITVEC_HPP
 
-#include "set.hpp"
+#include <cassert>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
+#include <limits>
 
 namespace uasat {
 
-class BitVector : public AbstractSet {
-protected:
-  int length;
+struct bitvec_t {
+private:
+  uint64_t length; // in bits
+  uint64_t data[1];
 
 public:
-  BitVector(int length);
-
-  virtual Tensor contains(const Tensor &elem) override;
-  Tensor constant(const std::vector<int> &shape, unsigned long value);
+  /**
+   * Cannot be publicly created.
+   */
+  bitvec_t() = delete;
 
   /**
-   * Returns the intersection of the two bit vectors, which is their bitwise
-   * logical and.
+   * Creates a new bit vector with the given length. The vector must be
+   * destroyed when no longer needed.
    */
-  Tensor meet(const Tensor &elem1, const Tensor &elem2);
+  static bitvec_t *create(uint64_t length) {
+    assert(length <= std::numeric_limits<uint64_t>::max() - 63);
+
+    uint64_t blocks = (length + 63) / 64 + 1;
+    bitvec_t *vec = static_cast<bitvec_t *>(std::malloc(8 * blocks));
+    vec->length = length;
+    return vec;
+  }
 
   /**
-   * Returns the union of the two bit vectors, which is their bitwise logical
-   * or.
+   * Destroyes the given bit vector. The same vector cannot be destroyed twice.
    */
-  Tensor join(const Tensor &elem1, const Tensor &elem2);
+  static void destroy(bitvec_t *vec) {
+    assert(vec->length <= std::numeric_limits<uint64_t>::max() - 63);
+#ifndef NDEBUG
+    vec->length = std::numeric_limits<uint64_t>::max();
+#endif
+
+    std::free(vec);
+  }
 
   /**
-   * Returns true if the first bit vector is a subset of the second one.
+   * Copies the data from source to destination whose lengths must match.
    */
-  Tensor less(const Tensor &elem1, const Tensor &elem2);
+  static void copy(bitvec_t *dst, bitvec_t *src) {
+    assert(dst->length == src->length);
+    std::memcpy(dst->data, src->data, (dst->length + 7) / 8);
+  }
 
-  /**
-   * Returns the binary number that is the sum of the binary number elem and
-   * bit.
-   */
-  Tensor plus_one(const Tensor &elem, const Tensor &bit);
+  static void negate(bitvec_t *dst, bitvec_t *src) {
+    assert(dst->length == src->length);
 
-  /**
-   * Returns the number of bits set to one in the element.
-   */
-  Tensor weight(const Tensor &elem);
+    uint64_t blocks = (dst->length + 63) / 64;
+    for (uint64_t i = 0; i < blocks; i++)
+      dst->data[i] = ~(src->data[i]);
+  }
 };
 
 } // namespace uasat

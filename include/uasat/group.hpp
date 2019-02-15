@@ -89,6 +89,7 @@ public:
   Tensor inverse(const Tensor &elem) override;
   Tensor product(const Tensor &elem1, const Tensor &elem2) override;
 
+  Tensor constant(unsigned long value);
   Tensor increment(const Tensor &elem, const Tensor &flag);
   Tensor weight(const Tensor &elem);
 };

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018, Miklos Maroti, University of Szeged
+ * Copyright (c) 2016-2019, Miklos Maroti, University of Szeged
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -20,42 +20,21 @@
  * IN THE SOFTWARE.
  */
 
-#include <chrono>
-#include <iostream>
+#include "uasat/func.hpp"
+#include <stdexcept>
 
-#include "uasat/group.hpp"
+namespace uasat {
 
-void test_group() {
-  // uasat::SymmetricGroup g(4);
-  uasat::BinaryNumAddition g(5);
+bool check_shape(const std::vector<int> &shape, const Tensor &elem) {
+  const std::vector<int> &shape2 = elem.get_shape();
+  if (shape2.size() < shape.size())
+    return false;
 
-  g.test_axioms();
-  std::cout << "cardinality: " << g.find_cardinality() << std::endl;
+  for (size_t i = 0; i < shape.size(); i++)
+    if (shape[i] != shape2[i])
+      return false;
+
+  return true;
 }
 
-void test_logic() {
-  uasat::Tensor a = uasat::Tensor::lessthan(4);
-
-  for (uasat::Tensor b : a.slices())
-    std::cout << b << std::endl;
-
-  std::cout << uasat::Tensor::stack(a.slices()).logic_add(a) << std::endl;
-}
-
-void test_binarynum() {
-  uasat::BinaryNumAddition v(5);
-
-  if (false) {
-    for (int i = 0; i < 32; i++)
-      std::cout << v.constant(i) << std::endl;
-  }
-
-  std::cout << v.increment(v.constant(5), uasat::Tensor::constant({}, true))
-            << std::endl;
-  std::cout << v.weight(v.constant(7)) << std::endl;
-}
-
-int main() {
-  test_binarynum();
-  return 0;
-}
+} // namespace uasat

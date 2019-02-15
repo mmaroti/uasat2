@@ -1,4 +1,4 @@
-add_executable(testing testing.cpp)
+add_executable(testing testing.cpp plain.cpp)
 target_include_directories(testing PUBLIC ${CMAKE_BINARY_DIR}/include)
 target_link_libraries(testing PUBLIC uasat)
 
