@@ -24,6 +24,7 @@
 #include <iostream>
 
 #include "uasat/group.hpp"
+#include "uasat/shape.hpp"
 
 void test_group() {
   // uasat::SymmetricGroup g(4);
@@ -55,7 +56,17 @@ void test_binarynum() {
   std::cout << v.weight(v.constant(7)) << std::endl;
 }
 
+void test_shape() {
+  uasat::shape_t s0 = uasat::shape_t();
+  uasat::shape_t s1 = uasat::shape_t(2, s0);
+  uasat::shape_t s2 = uasat::shape_t(3, s1);
+  std::cout << s0 << " " << s0.length() << " " << s0.extent() << std::endl;
+  std::cout << s1 << " " << s1.length() << " " << s1.extent() << std::endl;
+  std::cout << s2 << " " << s2.length() << " " << s2.extent() << std::endl;
+}
+
 int main() {
-  test_binarynum();
+  // test_binarynum();
+  test_shape();
   return 0;
 }

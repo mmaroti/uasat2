@@ -23,29 +23,28 @@
 #ifndef UASAT_FUNC_HPP
 #define UASAT_FUNC_HPP
 
+#include "shape.hpp"
 #include "tensor.hpp"
 
 namespace uasat {
 
-bool check_shape(const std::vector<int> &shape, const Tensor &elem);
-
 class NullaryFunc {
 protected:
-  std::vector<int> codomain;
+  const shape_t codomain;
 
 public:
-  NullaryFunc(const std::vector<int> &codomain) : codomain(codomain) {}
+  NullaryFunc(const shape_t &codomain) : codomain(codomain) {}
 
   virtual Tensor apply() const = 0;
 };
 
 class UnaryFunc {
 protected:
-  const std::vector<int> domain;
-  const std::vector<int> codomain;
+  const shape_t domain;
+  const shape_t codomain;
 
 public:
-  UnaryFunc(const std::vector<int> &domain, const std::vector<int> &codomain)
+  UnaryFunc(const shape_t &domain, const shape_t &codomain)
       : domain(domain), codomain(codomain) {}
 
   virtual Tensor apply(const Tensor &elem) const = 0;
@@ -53,13 +52,13 @@ public:
 
 class BinaryFunc {
 protected:
-  const std::vector<int> domain1;
-  const std::vector<int> domain2;
-  const std::vector<int> codomain;
+  const shape_t domain1;
+  const shape_t domain2;
+  const shape_t codomain;
 
 public:
-  BinaryFunc(const std::vector<int> &domain1, const std::vector<int> &domain2,
-             const std::vector<int> &codomain)
+  BinaryFunc(const shape_t &domain1, const shape_t &domain2,
+             const shape_t &codomain)
       : domain1(domain1), domain2(domain2), codomain(codomain) {}
 
   virtual Tensor apply(const Tensor &elem) const = 0;
