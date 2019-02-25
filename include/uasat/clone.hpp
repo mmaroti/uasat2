@@ -23,9 +23,7 @@
 #ifndef UASAT_GROUP_HPP
 #define UASAT_GROUP_HPP
 
-#include "set.hpp"
-#include "tensor.hpp"
-#include <vector>
+#include "uasat/set.hpp"
 
 namespace uasat {
 

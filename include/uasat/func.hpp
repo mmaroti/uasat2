@@ -23,10 +23,12 @@
 #ifndef UASAT_FUNC_HPP
 #define UASAT_FUNC_HPP
 
-#include "shape.hpp"
-#include "tensor.hpp"
+#include "uasat/shape.hpp"
+#include "uasat/tensor.hpp"
 
 namespace uasat {
+
+class Tensor;
 
 class NullaryFunc {
 public:

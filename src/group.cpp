@@ -21,6 +21,7 @@
  */
 
 #include "uasat/group.hpp"
+#include "uasat/tensor.hpp"
 #include <cassert>
 #include <iostream>
 #include <stdexcept>

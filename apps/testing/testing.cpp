@@ -25,6 +25,7 @@
 
 #include "uasat/group.hpp"
 #include "uasat/shape.hpp"
+#include "uasat/tensor.hpp"
 
 void test_group() {
   // uasat::SymmetricGroup g(4);

@@ -23,10 +23,11 @@
 #ifndef UASAT_SET_HPP
 #define UASAT_SET_HPP
 
-#include "tensor.hpp"
 #include <vector>
 
 namespace uasat {
+
+class Tensor;
 
 class AbstractSet {
 protected:

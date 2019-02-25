@@ -21,6 +21,7 @@
  */
 
 #include "uasat/set.hpp"
+#include "uasat/tensor.hpp"
 #include <stdexcept>
 
 namespace uasat {

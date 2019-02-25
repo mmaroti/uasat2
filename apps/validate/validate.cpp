@@ -75,7 +75,7 @@ int validate2(int size) {
 
   uasat::Tensor symmetric =
       relation.logic_leq(relation.polymer({size, size}, {1, 0}))
-          .reshape(2, {size * size})
+          .fold_all()
           .fold_all();
 
   uasat::Tensor transitive =
@@ -83,7 +83,7 @@ int validate2(int size) {
           .logic_and(relation.polymer({size, size, size}, {0, 2}))
           .fold_any()
           .logic_leq(relation)
-          .reshape(2, {size * size})
+          .fold_all()
           .fold_all();
 
   uasat::Tensor equivalence =
@@ -110,10 +110,9 @@ int main() {
                   std::chrono::steady_clock::now() - start)
                   .count();
 
+  std::cout << "Finished in " << msecs << " milliseconds" << std::endl;
   if (result != 4140)
     std::cout << "Incorrect answer of " << result << std::endl;
-  else
-    std::cout << "Finished in " << msecs << " milliseconds" << std::endl;
 
   return 0;
 }
