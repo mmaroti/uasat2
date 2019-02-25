@@ -29,39 +29,154 @@
 namespace uasat {
 
 class NullaryFunc {
-protected:
-  const shape_t codomain;
-
 public:
-  NullaryFunc(const shape_t &codomain) : codomain(codomain) {}
+  virtual const shape_t &get_codomain() const = 0;
 
-  virtual Tensor apply() const = 0;
+  virtual const Tensor &apply() const = 0;
 };
 
 class UnaryFunc {
-protected:
-  const shape_t domain;
-  const shape_t codomain;
-
 public:
-  UnaryFunc(const shape_t &domain, const shape_t &codomain)
-      : domain(domain), codomain(codomain) {}
+  virtual const shape_t &get_domain() const = 0;
+  virtual const shape_t &get_codomain() const = 0;
 
   virtual Tensor apply(const Tensor &elem) const = 0;
 };
 
 class BinaryFunc {
+public:
+  virtual const shape_t &get_domain1() const = 0;
+  virtual const shape_t &get_domain2() const = 0;
+  virtual const shape_t &get_codomain() const = 0;
+
+  virtual Tensor apply(const Tensor &elem1, const Tensor &elem2) const = 0;
+};
+
+std::unique_ptr<UnaryFunc> identity(const shape_t &domain);
+
+std::unique_ptr<NullaryFunc> compose(std::unique_ptr<UnaryFunc> func,
+                                     std::unique_ptr<NullaryFunc> arg);
+
+std::unique_ptr<UnaryFunc> compose(std::unique_ptr<UnaryFunc> func,
+                                   std::unique_ptr<UnaryFunc> arg);
+
+class Constant : NullaryFunc {
 protected:
-  const shape_t domain1;
-  const shape_t domain2;
-  const shape_t codomain;
+  const shape_t domain;
+  const Tensor tensor;
 
 public:
-  BinaryFunc(const shape_t &domain1, const shape_t &domain2,
-             const shape_t &codomain)
-      : domain1(domain1), domain2(domain2), codomain(codomain) {}
+  Constant(const shape_t &domain, bool value);
 
-  virtual Tensor apply(const Tensor &elem) const = 0;
+  const shape_t &get_codomain() const override { return domain; }
+
+  const Tensor &apply() const override { return tensor; }
+};
+
+class LogicNot : UnaryFunc {
+protected:
+  const shape_t domain;
+
+public:
+  LogicNot(const shape_t &domain) : domain(domain) {}
+
+  const shape_t &get_domain() const override { return domain; }
+  const shape_t &get_codomain() const override { return domain; }
+
+  Tensor apply(const Tensor &tensor) const override {
+    assert(domain == tensor.get_shape());
+    return tensor.logic_not();
+  }
+};
+
+class LogicAnd : BinaryFunc {
+protected:
+  const shape_t domain;
+
+public:
+  LogicAnd(const shape_t &domain) : domain(domain) {}
+
+  const shape_t &get_domain1() const override { return domain; }
+  const shape_t &get_domain2() const override { return domain; }
+  const shape_t &get_codomain() const override { return domain; }
+
+  Tensor apply(const Tensor &tensor1, const Tensor &tensor2) const override {
+    assert(domain == tensor1.get_shape());
+    assert(domain == tensor2.get_shape());
+    return tensor1.logic_and(tensor2);
+  }
+};
+
+class LogicOr : BinaryFunc {
+protected:
+  const shape_t domain;
+
+public:
+  LogicOr(const shape_t &domain) : domain(domain) {}
+
+  const shape_t &get_domain1() const override { return domain; }
+  const shape_t &get_domain2() const override { return domain; }
+  const shape_t &get_codomain() const override { return domain; }
+
+  Tensor apply(const Tensor &tensor1, const Tensor &tensor2) const override {
+    assert(domain == tensor1.get_shape());
+    assert(domain == tensor2.get_shape());
+    return tensor1.logic_or(tensor2);
+  }
+};
+
+class LogicEqu : BinaryFunc {
+protected:
+  const shape_t domain;
+
+public:
+  LogicEqu(const shape_t &domain) : domain(domain) {}
+
+  const shape_t &get_domain1() const override { return domain; }
+  const shape_t &get_domain2() const override { return domain; }
+  const shape_t &get_codomain() const override { return domain; }
+
+  Tensor apply(const Tensor &tensor1, const Tensor &tensor2) const override {
+    assert(domain == tensor1.get_shape());
+    assert(domain == tensor2.get_shape());
+    return tensor1.logic_equ(tensor2);
+  }
+};
+
+class LogicLeq : BinaryFunc {
+protected:
+  const shape_t domain;
+
+public:
+  LogicLeq(const shape_t &domain) : domain(domain) {}
+
+  const shape_t &get_domain1() const override { return domain; }
+  const shape_t &get_domain2() const override { return domain; }
+  const shape_t &get_codomain() const override { return domain; }
+
+  Tensor apply(const Tensor &tensor1, const Tensor &tensor2) const override {
+    assert(domain == tensor1.get_shape());
+    assert(domain == tensor2.get_shape());
+    return tensor1.logic_leq(tensor2);
+  }
+};
+
+class LogicAdd : BinaryFunc {
+protected:
+  const shape_t domain;
+
+public:
+  LogicAdd(const shape_t &domain) : domain(domain) {}
+
+  const shape_t &get_domain1() const override { return domain; }
+  const shape_t &get_domain2() const override { return domain; }
+  const shape_t &get_codomain() const override { return domain; }
+
+  Tensor apply(const Tensor &tensor1, const Tensor &tensor2) const override {
+    assert(domain == tensor1.get_shape());
+    assert(domain == tensor2.get_shape());
+    return tensor1.logic_add(tensor2);
+  }
 };
 
 } // namespace uasat

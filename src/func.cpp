@@ -37,4 +37,49 @@ bool check_shape(const std::vector<int> &shape, const Tensor &elem) {
   return true;
 }
 
+Constant::Constant(const shape_t &domain, bool value)
+    : domain(domain), tensor(Tensor::constant(domain, value)) {}
+
+class Identity : public UnaryFunc {
+protected:
+  const shape_t domain;
+
+public:
+  Identity(const shape_t &domain) : domain(domain) {}
+
+  const shape_t &get_domain() const override { return domain; }
+  const shape_t &get_codomain() const override { return domain; }
+
+  Tensor apply(const Tensor &tensor) const override {
+    assert(domain == tensor.get_shape());
+    return tensor;
+  }
+};
+
+std::unique_ptr<UnaryFunc> identity(const shape_t &domain) {
+  return std::make_unique<Identity>(domain);
+}
+
+class Compose11 : public UnaryFunc {
+protected:
+  const std::unique_ptr<UnaryFunc> func;
+  const std::unique_ptr<UnaryFunc> arg;
+
+public:
+  Compose11(std::unique_ptr<UnaryFunc> func, std::unique_ptr<UnaryFunc> arg)
+      : func(std::move(func)), arg(std::move(arg)) {}
+
+  const shape_t &get_domain() const override { return arg->get_domain(); }
+  const shape_t &get_codomain() const override { return func->get_codomain(); }
+
+  Tensor apply(const Tensor &tensor) const override {
+    return func->apply(arg->apply(tensor));
+  }
+};
+
+std::unique_ptr<UnaryFunc> compose(std::unique_ptr<UnaryFunc> func,
+                                   std::unique_ptr<UnaryFunc> arg) {
+  return std::make_unique<Compose11>(std::move(func), std::move(arg));
+}
+
 } // namespace uasat

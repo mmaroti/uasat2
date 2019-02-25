@@ -65,7 +65,7 @@ public:
     node = new node_t(dim, next.node);
   }
 
-  shape_t(const std::vector<unsigned int> &shape);
+  shape_t(const std::vector<int> &shape);
 
   ~shape_t();
 
@@ -73,11 +73,11 @@ public:
 
   bool operator==(const shape_t &other) const;
 
+  operator std::vector<int>() const;
+
   bool is_empty() const { return node == NULL; }
 
   bool prefix_of(const shape_t &other) const;
-
-  bool prefix_of(const std::vector<int> &other) const;
 
   unsigned int head() const {
     assert(node != NULL);

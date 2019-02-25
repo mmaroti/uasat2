@@ -24,11 +24,14 @@
 
 namespace uasat {
 
-shape_t::shape_t(const std::vector<unsigned int> &shape) {
+shape_t::shape_t(const std::vector<int> &shape) {
   node_t *n = NULL;
   std::size_t i = shape.size();
-  while (i > 0)
-    n = new node_t(shape[--i], n);
+  while (i > 0) {
+    int s = shape[--i];
+    assert(s >= 0);
+    n = new node_t(s, n);
+  }
   node = n;
 }
 
@@ -55,6 +58,18 @@ bool shape_t::operator==(const shape_t &other) const {
   }
 }
 
+shape_t::operator std::vector<int>() const {
+  std::vector<int> shape;
+
+  node_t *n = node;
+  while (n != NULL) {
+    shape.push_back(n->dim);
+    n = n->next;
+  }
+
+  return shape;
+}
+
 bool shape_t::prefix_of(const shape_t &other) const {
   node_t *n1 = node;
   node_t *n2 = other.node;
@@ -66,21 +81,6 @@ bool shape_t::prefix_of(const shape_t &other) const {
 
     n1 = n1->next;
     n2 = n2->next;
-  }
-}
-
-// TODO: we shall not need this, other shapes should be eliminated
-bool shape_t::prefix_of(const std::vector<int> &other) const {
-  node_t *n1 = node;
-  unsigned int n2 = 0;
-  for (;;) {
-    if (n1 == NULL)
-      return true;
-    else if (n2 >= other.size() || n1->dim != (unsigned int)other[n2])
-      return false;
-
-    n1 = n1->next;
-    n2 += 1;
   }
 }
 
