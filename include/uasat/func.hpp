@@ -23,12 +23,12 @@
 #ifndef UASAT_FUNC_HPP
 #define UASAT_FUNC_HPP
 
-#include "uasat/shape.hpp"
-#include "uasat/tensor.hpp"
+#include <memory>
 
 namespace uasat {
 
 class Tensor;
+class shape_t;
 
 class NullaryFunc {
 public:
@@ -54,132 +54,31 @@ public:
   virtual Tensor apply(const Tensor &elem1, const Tensor &elem2) const = 0;
 };
 
-std::unique_ptr<UnaryFunc> identity(const shape_t &domain);
+std::unique_ptr<NullaryFunc> constant(const shape_t &domain, bool value);
 
 std::unique_ptr<NullaryFunc> compose(std::unique_ptr<UnaryFunc> func,
                                      std::unique_ptr<NullaryFunc> arg);
 
+std::unique_ptr<NullaryFunc> compose(std::unique_ptr<BinaryFunc> func,
+                                     std::unique_ptr<NullaryFunc> arg1,
+                                     std::unique_ptr<NullaryFunc> arg2);
+
+std::unique_ptr<UnaryFunc> identity(const shape_t &domain);
+
+std::unique_ptr<UnaryFunc> logic_not(const shape_t &domain);
+
 std::unique_ptr<UnaryFunc> compose(std::unique_ptr<UnaryFunc> func,
                                    std::unique_ptr<UnaryFunc> arg);
 
-class Constant : NullaryFunc {
-protected:
-  const shape_t domain;
-  const Tensor tensor;
+std::unique_ptr<BinaryFunc> logic_and(const shape_t &domain);
 
-public:
-  Constant(const shape_t &domain, bool value);
+std::unique_ptr<BinaryFunc> logic_or(const shape_t &domain);
 
-  const shape_t &get_codomain() const override { return domain; }
+std::unique_ptr<BinaryFunc> logic_equ(const shape_t &domain);
 
-  const Tensor &apply() const override { return tensor; }
-};
+std::unique_ptr<BinaryFunc> logic_leq(const shape_t &domain);
 
-class LogicNot : UnaryFunc {
-protected:
-  const shape_t domain;
-
-public:
-  LogicNot(const shape_t &domain) : domain(domain) {}
-
-  const shape_t &get_domain() const override { return domain; }
-  const shape_t &get_codomain() const override { return domain; }
-
-  Tensor apply(const Tensor &tensor) const override {
-    assert(domain == tensor.get_shape());
-    return tensor.logic_not();
-  }
-};
-
-class LogicAnd : BinaryFunc {
-protected:
-  const shape_t domain;
-
-public:
-  LogicAnd(const shape_t &domain) : domain(domain) {}
-
-  const shape_t &get_domain1() const override { return domain; }
-  const shape_t &get_domain2() const override { return domain; }
-  const shape_t &get_codomain() const override { return domain; }
-
-  Tensor apply(const Tensor &tensor1, const Tensor &tensor2) const override {
-    assert(domain == tensor1.get_shape());
-    assert(domain == tensor2.get_shape());
-    return tensor1.logic_and(tensor2);
-  }
-};
-
-class LogicOr : BinaryFunc {
-protected:
-  const shape_t domain;
-
-public:
-  LogicOr(const shape_t &domain) : domain(domain) {}
-
-  const shape_t &get_domain1() const override { return domain; }
-  const shape_t &get_domain2() const override { return domain; }
-  const shape_t &get_codomain() const override { return domain; }
-
-  Tensor apply(const Tensor &tensor1, const Tensor &tensor2) const override {
-    assert(domain == tensor1.get_shape());
-    assert(domain == tensor2.get_shape());
-    return tensor1.logic_or(tensor2);
-  }
-};
-
-class LogicEqu : BinaryFunc {
-protected:
-  const shape_t domain;
-
-public:
-  LogicEqu(const shape_t &domain) : domain(domain) {}
-
-  const shape_t &get_domain1() const override { return domain; }
-  const shape_t &get_domain2() const override { return domain; }
-  const shape_t &get_codomain() const override { return domain; }
-
-  Tensor apply(const Tensor &tensor1, const Tensor &tensor2) const override {
-    assert(domain == tensor1.get_shape());
-    assert(domain == tensor2.get_shape());
-    return tensor1.logic_equ(tensor2);
-  }
-};
-
-class LogicLeq : BinaryFunc {
-protected:
-  const shape_t domain;
-
-public:
-  LogicLeq(const shape_t &domain) : domain(domain) {}
-
-  const shape_t &get_domain1() const override { return domain; }
-  const shape_t &get_domain2() const override { return domain; }
-  const shape_t &get_codomain() const override { return domain; }
-
-  Tensor apply(const Tensor &tensor1, const Tensor &tensor2) const override {
-    assert(domain == tensor1.get_shape());
-    assert(domain == tensor2.get_shape());
-    return tensor1.logic_leq(tensor2);
-  }
-};
-
-class LogicAdd : BinaryFunc {
-protected:
-  const shape_t domain;
-
-public:
-  LogicAdd(const shape_t &domain) : domain(domain) {}
-
-  const shape_t &get_domain1() const override { return domain; }
-  const shape_t &get_domain2() const override { return domain; }
-  const shape_t &get_codomain() const override { return domain; }
-
-  Tensor apply(const Tensor &tensor1, const Tensor &tensor2) const override {
-    assert(domain == tensor1.get_shape());
-    assert(domain == tensor2.get_shape());
-    return tensor1.logic_add(tensor2);
-  }
-};
+std::unique_ptr<BinaryFunc> logic_add(const shape_t &domain);
 
 } // namespace uasat
 

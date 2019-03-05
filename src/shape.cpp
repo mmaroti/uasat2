@@ -48,9 +48,9 @@ bool shape_t::operator==(const shape_t &other) const {
   node_t *n1 = node;
   node_t *n2 = other.node;
   for (;;) {
-    if (n1 == NULL)
-      return n2 == NULL;
-    else if (n2 == NULL || n1->dim != n2->dim)
+    if (n1 == n2)
+      return true;
+    else if (n1 == NULL || n2 == NULL || n1->dim != n2->dim)
       return false;
 
     n1 = n1->next;
@@ -74,7 +74,7 @@ bool shape_t::prefix_of(const shape_t &other) const {
   node_t *n1 = node;
   node_t *n2 = other.node;
   for (;;) {
-    if (n1 == NULL)
+    if (n1 == n2 || n1 == NULL)
       return true;
     else if (n2 == NULL || n1->dim != n2->dim)
       return false;
